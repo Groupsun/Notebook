@@ -309,3 +309,20 @@ Perimeter is 14
 ```
 
 可以注意到的是，Python是如何漂亮的进行输出的。我们在'Area is'之后没有声明一个空格，但是在打印的时候却自动加上了一个空格使得输出更容易阅读。
+
+## 控制流
+
+### if语句
+
+Python中if语句块的格式：
+
+```
+if [conditions]:
+    # statements
+elif [conditions]:
+    # statements
+else:
+    # statements
+```
+
+当然，使用if语句块可以是if-else、if-elif-else的形式，或者只是用if语句。
