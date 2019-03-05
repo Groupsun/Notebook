@@ -257,3 +257,55 @@ IndentationError: unexpected indent
 Python官方的缩进建议：4个空格，可以将制表符设定为这个值来缩进。
 
 对静态语言程序员需要注意的是：Python不会使用大括号来表示块，只能使用缩进的形式来表示。
+
+## 运算符和表达式
+
+### 运算符
+
+Python中一些常用的运算符：+ - * **（乘方） / //（整除） % << >> & | ^ ~ < > <= >= == != not（布尔非） and or 等等
+
+详细的运算符信息参考：https://docs.python.org/3/library/operator.html#module-operator
+
+### 数值运算与赋值的快捷方式
+
+变量 = 变量 运算符 表达式 => 变量 运算符 = 表达式
+
+### 求值顺序
+
+详细的求值顺序参见：https://docs.python.org/3/reference/expressions.html?highlight=evaluation%20order#evaluation-order
+
+下面给出一个大致的顺序，从最低优先级到最高优先级：
+
+![avatar](./images/python-evaluation-order-1.png)
+
+![avatar](./images/python-evaluation-order-2.png)
+
+### 改变求值的顺序
+
+使用括号：2 + 3 * 4 => (2 + 3) * 4
+
+### 结合性（Associativity）
+
+运算符的结合性是从左到右，意味着相同优先级的运算符从左到右的方式依次求值。比如，2 + 3 + 4 等同于 (2 + 3) + 4。
+
+### 表达式
+
+示例：
+
+```python
+length = 5
+breadth = 2
+
+area = length * breadth
+print('Area is', area)
+print('Perimeter is', 2 * (length + breadth))
+```
+
+输出：
+
+```
+Area is 10
+Perimeter is 14
+```
+
+可以注意到的是，Python是如何漂亮的进行输出的。我们在'Area is'之后没有声明一个空格，但是在打印的时候却自动加上了一个空格使得输出更容易阅读。
