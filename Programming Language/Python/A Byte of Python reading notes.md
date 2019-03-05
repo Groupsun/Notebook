@@ -314,15 +314,151 @@ Perimeter is 14
 
 ### if语句
 
+[这里]: ./关于input函数.md
+
 Python中if语句块的格式：
 
 ```
 if [conditions]:
     # statements
-elif [conditions]:
-    # statements
-else:
-    # statements
+(elif [conditions]:)
+    (# statements)
+(else:)
+    (# statements)
 ```
 
-当然，使用if语句块可以是if-else、if-elif-else的形式，或者只是用if语句。
+例子：
+
+```python
+number = 23
+guess = int(input('Enter an integer : '))
+
+if guess == number:
+    # New block starts here
+    print('Congratulations, you guessed it.')
+    print('(but you do not win any prizes!)')
+    # New block ends here
+elif guess < number:
+    # Another block
+    print('No, it is a little higher than that')
+    # You can do whatever you want in a block ...
+else:
+    print('No, it is a little lower than that')
+    # you must have guessed > number to reach here
+
+print('Done')
+# This last statement is always executed,
+# after the if statement is executed.
+```
+
+当然，使用if语句块可以是if-else、if-elif-else的形式，或者只是用if语句。例子中使用的 input() 方法，可以在[这里]参考。
+
+实际上，在Python当中，int是一个类。当然目前我们可以只把它看作是一个将字符串转换成整型的方法。
+
+可以注意到，在if语句块中的缩进能够高速Python哪些表达式属于哪些语句块。
+
+if语句块中条件的说明以冒号':'结尾，表示判断条件的结束。
+
+当然，你也可以在if语句块中嵌套if语句块。同时，elif和else语句块部分是可选的。
+
+python中的条件判断使用and、or、not运算符来组合成一个表达式：
+
+```python
+if i < 0 or i > 10:
+    #statement
+```
+
+C/C++程序员需要注意的是：Python没有switch表达式。可以使用if..elif..else语句块来达成同样的效果。
+
+### while语句
+
+Python中while语句块的格式：
+
+```
+while [conditions]:
+    #statements
+(else:)
+    (#statements)
+```
+
+例程：
+
+```python
+number = 23
+running = True
+
+while running:
+    guess = int(input('Enter an integer : '))
+
+    if guess == number:
+        print('Congratulations, you guessed it.')
+        # this causes the while loop to stop
+        running = False
+    elif guess < number:
+        print('No, it is a little higher than that.')
+    else:
+        print('No, it is a little lower than that.')
+
+else:
+    print('The while loop is over.')
+    # Do anything else you want to do here
+
+print('Done')
+```
+
+可以注意到，running的类型是布尔型，在作为条件时可以直接使用（作为布尔值）。
+
+对于C/C++程序员来说，值得注意的是：在Python中while语句可以拥有else语句块，else语句块是可选的。
+
+### for语句
+
+例子：
+
+```python
+for i in range(1, 5):
+    print(i)
+else:
+    print('The for loop is over')
+```
+
+输出：
+
+```
+1
+2
+3
+4
+```
+
+for的循环条件是一组序列，在上述的例子中，我们使用了 range 方法来生成这样的序列。通过在传递两个参数给 range 方法，返回一组数字的序列，注意：不包括最后一个数字，也就是说声明序列的两个参数表示的范围是左闭右开的。比如， range(1, 5) 得到的序列是[1, 2, 3, 4]。 range 默认的以1的长度步增。range的第三个参数可以声明步增的长度。比如， range(1, 5, 2)得到[1, 3]。
+
+注意到 range() 每次只会产生一个数字，如果你想要完整的数字序列，可以在 list() 方法中调用 range() 。比如， list(range(5)) 可以得到 [0, 1, 2, 3, 4]：
+
+```python
+l = list(range(1, 5))
+print(l)
+```
+
+输出：
+
+```
+[1, 2, 3, 4]
+```
+
+Lists会在后面的数据结构章节中详细阐述。
+
+上述的例子中，for i in range(1, 5)和for i in [1, 2, 3, 4]的效果相同。这个语句每次将每个数字（或者对象）赋给i，然后对于每个i的值执行一次语句块中的表达式。
+
+与while语句一样，else语句块是可选项。
+
+对于C/C++/Java/C#程序员来说需要注意的是：Python的for循环和C/C++中的for循环有着根本性的不同。C#程序员会发现Python中的for循环和C#中的foreach循环很像。Java程序员则会发现和Java 1.5开始引入的for (int i : IntArray)语句很像。在C/C++中，for (int i = 0; i < 5; i++)语句，在Python中只需要写for i in range(0, 5)。Python中的for循环更简洁、更具有表达性且更难出错。
+
+### break语句
+
+Python中的break语句与其他高级语言的作用一致，在这里不再进行赘述。不过要注意的一点是，break语句执行后不会执行for或者while循环中的else语句块。
+
+### continue语句
+
+Python中的continue语句与其他高级语言的作用一致，在这里不再进行赘述。
+
+注：原文例子中的 len() 将作为参数的字符串的长度返回。
