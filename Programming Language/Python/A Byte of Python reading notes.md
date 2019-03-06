@@ -462,3 +462,243 @@ Python中的break语句与其他高级语言的作用一致，在这里不再进
 Python中的continue语句与其他高级语言的作用一致，在这里不再进行赘述。
 
 注：原文例子中的 len() 将作为参数的字符串的长度返回。
+
+## 函数
+
+函数使用关键字 def 来定义。在这个关键字之后是函数的标识符，然后是一对括号，括号当中是一些变量的名字（参数），最后是一个冒号，标明函数所要执行的语句块开始。
+
+例子：
+
+```python
+def say_hello():
+    # block belonging to the function
+    print("hello world")
+# End of function
+
+say_hello() # call the function
+say_hello() # call the function again
+```
+
+### 函数参数
+
+函数参数在函数声明中的括号中定义，使用逗号来进行分隔。当我们调用该函数时，就要提供函数参数。定义函数时的参数称为形参，调用函数时传递的参数称为实参。
+
+例子：
+
+```python
+def print_max(a, b):
+    if a > b:
+        print(a, 'is maximum')
+    elif a == b:
+        print(a, 'is equal to', b)
+    else:
+        print(b, 'is maximum')
+
+# directly pass literal values
+print_max(3, 4)
+
+x = 5
+y = 7
+
+# pass variables as arguments
+print_max(x, y)
+```
+
+### 局部变量
+
+在函数中定义的变量不能在函数以外的地方引用。也就是说在函数内定义的变量是局部的。举例如下：
+
+```python
+x = 50
+
+def print_x(x):
+    x = 2
+    print(x)
+
+print_x(x)
+print(x)
+```
+
+输出：
+
+```
+2
+50
+```
+
+### global语句
+
+如果你想在函数里将值赋给顶层（不在任何函数和类定义中的语句块）的某个变量，且这个变量在函数块中有同名的变量，则可以使用global语句来标明所引用的是全局的变量。
+
+例子：
+
+```python
+x = 50
+
+def print_x():
+    global x
+    x = 2
+    print(x)
+
+print_x()
+print(x)
+```
+
+输出：
+
+```
+2
+2
+```
+
+global语句可以声明多个变量，如：global x, y, z。
+
+### 默认参数值
+
+某些情况下，你可能想让你定义的函数中的参数是可选的。此时可以将参数声明默认的参数值来实现。通过在函数定义中在参数后使用赋值运算符赋予默认值即可。
+
+参数的默认值必须是常数，并且是一成不变的。例子如下：
+
+```python
+def say(message, times=1):
+    print(message * times)
+
+say("test")
+say("ha", 5)
+```
+
+输出：
+
+```
+test
+hahahahaha
+```
+
+与C/C++一样，所有默认参数必须位于非默认参数的后面。也就是说所有的默认参数都必须位于参数声明的最后面。def fun(a, b=5)是正确的，但def fun(b=5, a)是错误的。
+
+### 关键字参数
+
+如果你所定义的函数参数比较多，那么你在调用的时候可能会想使用名字来指代它们而非顺序。
+
+例子：
+
+```python
+def fun(a, b=2, c=3):
+    print('a =', a, 'b =', b, 'c =', c)
+
+
+fun(1, 2, 3)
+fun(1, c=2)
+fun(b=3, a=1, c=2)
+```
+
+输出
+
+```
+a = 1 b = 2 c = 3
+a = 1 b = 2 c = 2
+a = 1 b = 3 c = 2
+```
+
+### 可变参数
+
+有时候你可能会想定义一个接受任意数量参数的函数，也就是可变参数的函数。可以使用星号来进行指定。
+
+例子：
+
+```python
+def total(a=5, *numbers, **phonebook):
+    print('a', a)
+
+    #iterate through all the items in tuple
+    for single_item in numbers:
+        print('single_item', single_item)
+    
+    #iterate through all the items in dictionary
+    for first_part, second_part in phonebook.items():
+        print(first_part,second_part)
+
+total(10,1,2,3,Jack=1123,John=2231,Inge=1560)
+```
+
+输出：
+
+```
+a 10
+single_item 1
+single_item 2
+single_item 3
+Inge 1560
+John 2231
+Jack 1123
+```
+
+当我们声明一个带有星号的参数如：*param时，从这个位置起到最后的参数都会被搜集并汇集成一个称为param的元组。
+
+同样，当我们声明一个带有两个星号的参数如：**param时，从这个位置起到最后的参数都会被搜集并汇集成一个称为param的字典。
+
+有关元组和字典的详细阐述在后面会提到。
+
+### return语句
+
+return语句可以在函数中返回值，或者从函数中跳出。
+
+可以在函数中单单使用一个return来从函数中跳出，相当于return None。None在Python中是一个特别的类型，表示什么都没有。
+
+所有的函数都会在最后隐式的包含一条return None语句，除非你显式的写你自己的return语句。你可以运行print(some_function())，some_function中没有return语句，比如：
+
+```python
+def some_function()
+    pass
+```
+
+此时print输出的结果是"None"。Python中的pass语句表示一个空的语句块。
+
+### DocStrings
+
+DocString是一种重要的工具，可以帮助你更好的记录程序使其更容易理解。DocString甚至可以在程序运行的时候通过一个文档来获取信息。
+
+例子：
+
+```python
+def print_max(x, y):
+    '''This Function prints the max_number between x and y.
+
+    :param x: Integer x
+    :param y: Integer y
+    :return: Max integer number between x and y
+    '''
+
+    x = int(x)
+    y = int(y)
+
+    if x > y:
+        return x
+    else:
+        return y
+
+print(print_max.__doc__)
+print(print_max(3, 5))
+```
+
+输出：
+
+```
+This Function prints the max_number between x and y.
+
+    :param x: Integer x
+    :param y: Integer y
+    :return: Max integer number between x and y
+    
+5
+```
+
+函数的语句块中第一行逻辑行就是该函数的docstring。DocString在模块（modules）以及类（classes）当中也存在。
+
+docstring接下来是多行的字符串。docstring的一般个格式是，第一行是一个大写字母开头的句子，描述函数的作用，以句号结尾。第二行空一行，从第三行开始详细描述函数的功能，包括参数意义、具体功能等等。
+
+我们可以通过使用 print_max 的__doc__属性来获得该函数的docstring。需要谨记，在Python中所有东西都是对象，自然包括函数。在后面类的章节中会更详细的了解对象。
+
+当你在Python中使用 help() 函数时，实际上就是获取函数的__doc__属性并将其打印出来。
+
+自动化的工具可以用这种方式来检索你程序中的文档，因此我强烈建议你给你重要的程序中加入文档。你的Python发行版中的 pydoc 的作用和 help() 函数的作用类似。
