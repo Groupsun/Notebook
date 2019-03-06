@@ -702,3 +702,214 @@ docstring接下来是多行的字符串。docstring的一般个格式是，第�
 当你在Python中使用 help() 函数时，实际上就是获取函数的__doc__属性并将其打印出来。
 
 自动化的工具可以用这种方式来检索你程序中的文档，因此我强烈建议你给你重要的程序中加入文档。你的Python发行版中的 pydoc 的作用和 help() 函数的作用类似。
+
+## 模块
+
+模块（Module）可以让你在别的程序中重用一些函数。有多种使用module的方法，但最简单的方法是创建一个以.py扩展结尾的文件，并包含所需要的函数和变量。
+
+另一种方法是使用撰写Python解释器本身的本地语言来编写模块。比如，你可以使用C语言来编写模块，在编译后，通过标准的Python解释器在Python代码中使用它。
+
+一个模块可以在其他的程序中import来使用其功能（函数和变量）。同样，我们也可以在程序中导入Python的标准库。
+
+例子：
+
+```python
+import sys
+
+for i in sys.argv:
+    print(i)
+
+print(sys.path)
+```
+
+输出（因人而异）：
+
+```
+modules.py
+['/home/sunnychen/Documents/python/learning', '/home/sunnychen/Software/miniconda3/lib/python37.zip', '/home/sunnychen/Software/miniconda3/lib/python3.7', '/home/sunnychen/Software/miniconda3/lib/python3.7/lib-dynload', '/home/sunnychen/Software/miniconda3/lib/python3.7/site-packages']
+```
+
+sys模块包含了与Python解释器相关的功能，也就是系统功能。如果它不是一个编译好的模块，也就是用Python写成的模块，那么Python的解释器会在它的sys.path提供的目录中搜索。如果找到了该模块，那么模块中的语句会开始运行并且能够为你所用。值得注意的是，初始化工作只在第一次导入模块的时候完成。
+
+sys.argv变量是一个字符串的列表。特别的，sys.argv是一个包含命令行参数（command line arguments）的列表，也就是使用命令行运行你所写的程序时，传递到你程序当中的参数。如果你在命令行中使用如下的形式运行：
+
+```bash
+$ python3 modules.py a b c
+```
+
+其中modules.py为：
+
+```python
+import sys
+
+for i in sys.argv:
+    print(i)
+```
+
+则输出为：
+
+```
+modules.py
+a
+b
+c
+```
+
+Python会将你在命令行中传递到程序中的参数存储在sys.argv当中。sys.argv中的列表，第一个元素永远是脚本的名称。
+
+sys.path内包含了导入模块的字典名称列表。可以观察到当前程序的目录也是sys.path的一部分，与 PYTHONPATH 环境变量相同。也就是说，你可以导入当前目录下的所有模块。否则，你只能将你的模块放入sys.path中的目录当中。
+
+因为当前目录就是你的程序运行的目录，可以运行import os; print(os.getcwd())来查看当前你运行程序所在的目录。
+
+### 按字节码编译的.pyc文件
+
+导入一个模块是的开销是很大的，因此Python使用了一些技巧使其变得更快。一种方法是创建按照字节码编译的.pyc文件，这个文件是Python将程序转换为中间形式的文件。这个.pyc文件当你在其它不同的程序再次导入该模块时十分有用。因为导入模块的一部分工作已经完成了，并且这些按字节编译的文件是平台独立的。
+
+一般来说，这些.pyc文件通常会在同一个目录下创建。如果Python没有权限在这个目录写，则不会创建.pyc文件。（Python3.7中，会在同一个目录下创建一个目录名为__pycache__，将.pyc文件放进这个目录当中。）
+
+### from..import语句
+
+如果你想直接导入变量 argv 进你的程序当中，则可以使用 from sys import argv 语句。
+
+警告：一般来说，尽量不要使用 from..import 语句，使用 import 语句。这样程序可以避免名字上的冲突问题，使其更具有可读性。
+
+### 模块的名字（__name__）
+
+所有的模块都有名字，并且都有方法在模块当中得到当前模块的名字。这对于一些特定的需求来说是比较有用的，比如查看当前的模块是独立运行的还是被导入进来运行的。如同之前所提到的，当一个模块第一次被导入的时候，模块的代码会被执行。我们可以利用这一特性来使模块的行为表现的不同——被它自己使用还是被其他模块导入使用。通过在程序中使用模块的__name__属性可以达到上述的需求：
+
+```python
+if __name__ == '__main__':
+    print('This program is being run by itself')
+else:
+    print('I am being imported from another module')
+```
+
+输出：
+
+```
+$ python module_using_name.py
+This program is being run by itself
+
+$ python
+>>> import module_using_name
+I am being imported from another module
+>>>
+```
+
+每个python模块都定义了__name__的属性。如果这个属性与__main__相等，则表明这个模块被用户独立的运行当中，此时我们就可以采取一些特别的行动。
+
+### 创建你自己的模块
+
+所有的Python程序都是一个模块，你只需要保证它是.py的扩展名即可。
+
+例子：
+
+```python
+# save as mymodule.py
+
+def say_hi():
+    print('Hi, this is mymodule speaking.')
+
+__version__ = '0.1'
+```
+
+需要注意的是，该模块需要放在你要调用该模块的程序的同一个目录下，或者在sys.path列举的目录下。
+
+```python
+# save as mymodule_demo.py
+
+import mymodule
+
+mymodule.say_hi()
+print('Version', mymodule.__version__)
+```
+
+输出：
+
+```
+$ python mymodule_demo.py
+Hi, this is mymodule speaking.
+Version 0.1
+```
+
+你也可以使用 from..import 语句来完成：
+
+```python
+from mymodule import say_hi, __version__
+
+say_hi()
+print('Version', __version__)
+```
+
+显然，上述的做法存在一种情况，就是当现在的模块中已经有一个名字是__version__的变量存在的时候，会造成名字上的冲突。这也是为什么我们不建议使用 from..import 语句的原因。你还可以这样使用：
+
+```python
+from mymodule import *
+```
+
+这样会将模块中所有公共的名称，如 say_hi 。但是不会导入__version__，因为它以双下划线开头。
+
+### dir函数
+
+dir() 函数是一个内置的函数，它返回一个对象中定义了的名称的列表。如果这个对象是一个模块，那么这个列表包括在这个模块中定义了的函数、类以及变量。
+
+这个函数可以接受参数。如果参数是模块的名字，那么这个函数会返回指定模块定义的名称的列表。如果没有参数，则返回当前模块定义的名称的列表。
+
+例子：
+
+```
+$ python
+>>> import sys
+
+# get names of attributes in sys module
+>>> dir(sys)
+['__displayhook__', '__doc__',
+'argv', 'builtin_module_names',
+'version', 'version_info']
+# only few entries shown here
+
+# get names of attributes for current module
+>>> dir()
+['__builtins__', '__doc__',
+'__name__', '__package__', 'sys']
+
+# create a new variable 'a'
+>>> a = 5
+
+>>> dir()
+['__builtins__', '__doc__', '__name__', '__package__', 'sys', 'a']
+
+# delete/remove a name
+>>> del a
+
+>>> dir()
+['__builtins__', '__doc__', '__name__', '__package__', 'sys']
+```
+
+指的注意的几点是，当前模块中导入了其他模块后，在当前模块调用 dir() 函数也会把导入的模块的名字放在列表中。之后我们定义了一个新的变量 a ，再调用 dir() 函数，a也会出现在列表当中。接着我们使用 del 语句移除这个变量 a 。此时再调用 dir() 函数，变量 a 不会再出现在列表当中。
+
+关于 del ：这个语句在执行之后就会删除所声明的变量/名称，且无法再访问它们。
+
+### 包
+
+现在，你应该开始组织你的程序的层次结构。变量通常位于函数当中，函数和全局变量通常位于模块当中。而组织模块的方法则是使用包。
+
+包实际上就是一个包含模块的文件夹，并带有一个特殊的__init__.py文件，来提示Python这是一个包含Python模块的文件夹。
+
+一个包组织的例子：
+
+```
+- <some folder present in the sys.path>/
+    - world/
+        - __init__.py
+        - asia/
+            - __init__.py
+            - india/
+                - __init__.py
+                - foo.py
+        - africa/
+            - __init__.py
+            - madagascar/
+                - __init__.py
+                - bar.py
+```
