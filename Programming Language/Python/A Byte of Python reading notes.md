@@ -1,5 +1,7 @@
 # A Byte of Python reading notes
 
+Python简明教程 的阅读笔记，面向有编程经验背景的程序员阅读。
+
 ## 基础
 
 ### 注释
@@ -913,3 +915,296 @@ $ python
                 - __init__.py
                 - bar.py
 ```
+
+## 数据结构
+
+Python有四种内置的数据结构：list，tuple，dictionary以及set（列表、元组、字典以及集合）。
+
+### 列表（List）
+
+List 是存储一个序列的元素的数据结构。声明一个列表，其中的元素要使用方括号闭合，且使用逗号进行分隔。当你创建了一个列表之后，你可以在列表中增加、删除或者搜索元素。因此列表也是一个可变的数据类型。
+
+#### 对象和类的简单介绍
+
+一个列表可以作为对象以及类使用的例子。当我们使用一个变量i，并且将其赋值为5的时候，你可以认为我们创建了一个int类的对象i。实际上，你可以通过 help(int) 来作更多的了解。
+
+一个类还可以拥有方法，也就是对这个类定义仅对它启用的函数。你可以只在拥有这个类的某个对象时使用它这些方法。举例来说，Python对于 list 类提供了一个 append 的方法，可以允许你在列表的末尾添加元素。如： mylist.append('an item') 会在 mylist 的末尾添加一个字符串。
+
+一个类还可以拥有字段（fields），字段就是只在该类当中使用的变量定义的区域。你可以只在拥有这些类的对象时使用这些变量/名称。字段同样可以使用：mylist.field。
+
+例子：
+
+```python
+strlist = ["amd", "intel", "arm", "x86", "risc-v", "mips"]
+
+print("len of the strlist", len(strlist))
+
+print("items: ", end = ' ')
+print(strlist)
+
+print("going to append")
+strlist.append("sparc")
+
+print(strlist)
+
+print("going to sort the list")
+strlist.sort()
+
+print(strlist)
+
+print("going to delete", strlist[0])
+
+del strlist[0]
+
+print(strlist)
+```
+
+输出：
+
+```
+len of the strlist 6
+items:  ['amd', 'intel', 'arm', 'x86', 'risc-v', 'mips']
+going to append
+['amd', 'intel', 'arm', 'x86', 'risc-v', 'mips', 'sparc']
+going to sort the list
+['amd', 'arm', 'intel', 'mips', 'risc-v', 'sparc', 'x86']
+going to delete amd
+['arm', 'intel', 'mips', 'risc-v', 'sparc', 'x86']
+```
+
+列表是允许异构的，也就是说可以将不同类型的数据放在同一个列表当中，你甚至可以将另一个列表作为该列表的元素。但是并不推荐这样做，这样会给程序带来很多的隐患。请尽量使列表中的元素都是同类型的。
+
+遍历列表的方法可以使用 for..in 语句，也可以使用比较经典的下标访问形式。列表也是一种序列（sequences），有关序列的相关知识在后面会提到。
+
+接下来是对列表几个常用的方法进行展示。打印列表可以使用 for..in 语句，但是直接使用 print() 方法会更为简单。 append() 方法上面已经提到过， sort() 方法对列表中的元素进行排序，按照列表中元素的类所定义的"<"运算符方法来进行排序。
+
+### 元组（Tuple）
+
+元组用于将多个对象保存在一起。你可以认为它和列表很相似，但是元组不能提供列表类提供给你的广泛功能。元组的一个主要的特性是它们和字符串一样是不可变的，你不能修改元组。
+
+元组的定义，需要将对象使用括号闭合，并使用逗号来进行分隔。
+
+元组通常用于保证一个语句或者一个用户自定义的函数所操作的一组数据是安全的，也就是不变的，还有就是在 for 语句中指定下标范围时， range() 函数所产生的元组。
+
+例子：
+
+```python
+# I would recommend always using parentheses
+# to indicate start and end of tuple
+# even though parentheses are optional.
+# Explicit is better than implicit.
+zoo = ('python', 'elephant', 'penguin')
+print('Number of animals in the zoo is', len(zoo))
+
+new_zoo = 'monkey', 'camel', zoo # parentheses not required but are a good idea
+print('Number of cages in the new zoo is', len(new_zoo))
+print('All animals in new zoo are', new_zoo)
+print('Animals brought from old zoo are', new_zoo[2])
+print('Last animal brought from old zoo is', new_zoo[2][2])
+print('Number of animals in the new zoo is',
+len(new_zoo)-1+len(new_zoo[2]))
+```
+
+输出：
+
+```
+$ python ds_using_tuple.py
+Number of animals in the zoo is 3
+Number of cages in the new zoo is 3
+All animals in new zoo are ('monkey', 'camel', ('python', 'elephant', 'penguin'))
+Animals brought from old zoo are ('python', 'elephant', 'penguin')
+Last animal brought from old zoo is penguin
+Number of animals in the new zoo is 5
+```
+
+值得注意的是，当一个元组中的其中一个元素是一个元组的时候，在应用 len() 函数时，该元组也只会被记做1个元素。
+
+如果想要声明一个空的元组，那么很简单只需要：myempty = ()。而声明一个只有1个元素的元组，则需要在唯一的元素后加上一个逗号：singleton = (2, )。
+
+### 字典（Dictionary）
+
+与其他高级语言中的字典一样，Python中的字典将关键字（key）和值（value）相对应。需要注意的是，关键字必须是唯一的。字典中的关键字必须是不可变的对象（如字符串），而值则可以是可变的，也可以是不可变的对象。也可以这样说：字典中的关键字尽量使用简单的对象。
+
+在字典中声明一对关键字与值的方法是：d = {key1 : value1, key2 : value2}。需要注意的是，字典中的 关键字-值 对不会按任何特定的顺序排列。如果想要其有序，需要在使用前对其进行排序。
+
+所有你使用到的字典对象都是属于 dict 类的。
+
+例子：
+
+```python
+# 'ab' is short for 'a'ddress'b'ook
+
+ab = {
+'Swaroop': 'swaroop@swaroopch.com',
+'Larry': 'larry@wall.org',
+'Matsumoto': 'matz@ruby-lang.org',
+'Spammer': 'spammer@hotmail.com'
+}
+
+print("Swaroop's address is", ab['Swaroop'])
+
+# Deleting a key-value pair
+del ab['Spammer']
+
+print('\nThere are {} contacts in the address-book\n'.format(len(ab)))
+
+for name, address in ab.items():
+    print('Contact {} at {}'.format(name, address))
+
+# Adding a key-value pair
+ab['Guido'] = 'guido@python.org'
+
+if 'Guido' in ab:
+    print("\nGuido's address is", ab['Guido'])
+```
+
+输出：
+
+```
+$ python ds_using_dict.py
+Swaroop's address is swaroop@swaroopch.com
+
+There are 3 contacts in the address-book
+
+Contact Swaroop at swaroop@swaroopch.com
+Contact Matsumoto at matz@ruby-lang.org
+Contact Larry at larry@wall.org
+
+Guido's address is guido@python.org
+```
+
+如果你有C++标准库中map容器的使用经验，那么Python中的字典应该对你来说是很熟悉的。字典中的 item() 方法会返回一个元组，元组中含有字典中所有的元素对。for语句中可以分别表示关键字和值。加入元素对到字典的方法和C++中的非常类似，可以简单地通过使用索引运算符访问一个键值并为其分配与之相应的值。我们还可以使用 in 操作符来检查特定的元素对是否在字典当中。
+
+函数中的关键字参数就是使用了字典。调用函数时，声明的参数名字实际上就是字典中的关键字。
+
+### 序列（Sequence）
+
+列表、元组以及字符串都是序列的例子。序列最主要的特性是资格测试（membership tests）和索引操作（indexing operations），允许我们直接从一个序列中获取一个指定的元素。
+
+上面所提到的序列的三种形态，还有一个称为切片（slicing）的运算符，允许我们获取序列中的特定一部分。
+
+例子：
+
+```python
+shoplist = ['apple', 'mango', 'carrot', 'banana']
+name = 'swaroop'
+
+# Indexing or 'Subscription' operation #
+print('Item 0 is', shoplist[0])
+print('Item 1 is', shoplist[1])
+print('Item 2 is', shoplist[2])
+print('Item 3 is', shoplist[3])
+print('Item -1 is', shoplist[-1])
+print('Item -2 is', shoplist[-2])
+print('Character 0 is', name[0])
+
+# Slicing on a list #
+print('Item 1 to 3 is', shoplist[1:3])
+print('Item 2 to end is', shoplist[2:])
+print('Item 1 to -1 is', shoplist[1:-1])
+print('Item start to end is', shoplist[:])
+
+# Slicing on a string #
+print('characters 1 to 3 is', name[1:3])
+print('characters 2 to end is', name[2:])
+print('characters 1 to -1 is', name[1:-1])
+print('characters start to end is', name[:])
+```
+
+```
+$ python ds_seq.py
+Item 0 is apple
+Item 1 is mango
+Item 2 is carrot
+Item 3 is banana
+Item -1 is banana
+Item -2 is carrot
+Character 0 is s
+Item 1 to 3 is ['mango', 'carrot']
+Item 2 to end is ['carrot', 'banana']
+Item 1 to -1 is ['mango', 'carrot']
+Item start to end is ['apple', 'mango', 'carrot', 'banana']
+characters 1 to 3 is wa
+characters 2 to end is aroop
+characters 1 to -1 is waroo
+characters start to end is swaroop
+```
+
+Python中的下标可以是负数，此时位置会从序列的结尾开始算，也就是说，-1表示序列最后的元素，-2表示序列最后一个元素的前一个元素。
+
+切片运算在下标访问时通过一个冒号来转化为访问序列中的一部分。如果开始部分的数字没有声明，那么python会从头开始，同理，如果结束部分的数字没有声明，那么python会一直切片到结尾。注意，切片结果包含开头，但是不包括结尾，也就是左闭右开的形式。
+
+切片的范围同样可以使用负数，如 shoplist[:-1] 表示切片的范围从开头到倒数第二个元素。当然，你还可以提供第三个参数给切片，表示步长（默认为1）。步长可以为负数，表示从后往前数。
+
+### 集合（Set）
+
+集合是简单对象的无序集合。使用集合，你可以测试某些对象的资格，查看它是否是别的集合的自己，或者查看两个集合的交集等。
+
+例子：
+
+```
+>>> bri = set(['brazil', 'russia', 'india'])
+>>> 'india' in bri
+True
+>>> 'usa' in bri
+False
+>>> bric = bri.copy()
+>>> bric.add('china')
+>>> bric.issuperset(bri)
+True
+>>> bri.remove('russia')
+>>> bri & bric # OR bri.intersection(bric)
+{'brazil', 'india'}
+```
+
+### 引用
+
+当你创建了一个对象，并且将其赋值给一个变量时，这个变量只是引用了这个对象并且不代表对象其本身。可以理解为，对象的名字指向了该对象在内存中的位置（地址）。这称为将名字绑定（binding）给对象。
+
+一般来说在编程的时候不需要担心这个特性，但是这个特性会带来一些微妙的影响。
+
+例子：
+
+```python
+print('Simple Assignment')
+shoplist = ['apple', 'mango', 'carrot', 'banana']
+# mylist is just another name pointing to the same object!
+mylist = shoplist
+
+# I purchased the first item, so I remove it from the list
+del shoplist[0]
+
+print('shoplist is', shoplist)
+print('mylist is', mylist)
+# Notice that both shoplist and mylist both print
+# the same list without the 'apple' confirming that
+# they point to the same object
+
+print('Copy by making a full slice')
+# Make a copy by doing a full slice
+mylist = shoplist[:]
+# Remove first item
+del mylist[0]
+
+print('shoplist is', shoplist)
+print('mylist is', mylist)
+# Notice that now the two lists are different
+```
+
+输出：
+
+```
+$ python ds_reference.py
+Simple Assignment
+shoplist is ['mango', 'carrot', 'banana']
+mylist is ['mango', 'carrot', 'banana']
+Copy by making a full slice
+shoplist is ['mango', 'carrot', 'banana']
+mylist is ['carrot', 'banana']
+```
+
+实际上就是老生常谈的引用问题，有编程经验的程序员已经熟稔于心，这里不再赘述。不过指的注意的是复制整个序列对象的时候，使用切片运算符从开始到结尾进行切片即可。
+
+### 关于字符串更多的内容
+
+所有的字符串都是对象，字符串有各种各样的方法，如之前使用过的 format() 。所有的字符串都是类 str 的对象。关于字符串更多的方法参见：https://docs.python.org/3/library/stdtypes.html#str
