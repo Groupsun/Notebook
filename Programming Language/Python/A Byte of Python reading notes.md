@@ -1208,3 +1208,229 @@ mylist is ['carrot', 'banana']
 ### 关于字符串更多的内容
 
 所有的字符串都是对象，字符串有各种各样的方法，如之前使用过的 format() 。所有的字符串都是类 str 的对象。关于字符串更多的方法参见：https://docs.python.org/3/library/stdtypes.html#str
+
+## 面向对象编程
+
+类与对象是面向对象变成的两个主要的方面。一个类创建一个新的类型，对象是类的实例。
+
+对象可以使用属于它的普通变量来存储数据。属于对象或者类的变量称为字段（fields）。对象还能使用属于类的函数，这些函数称为这个类的方法（method）。字段和方法通称为类的属性（attributes）。
+
+字段有两种类型：属于每个实例/对象的称为实例变量（instance variables），属于类本身的称为类变量（class variables）。
+
+通过 class 关键字可以创建一个类。这个类的字段与方法可以在缩进代码块中予以列出。
+
+### self
+
+类的方法与普通的函数只有一种特定的区别：它们需要在参数列表的开头添加一个额外的名字，但是你是不需要给这个值传递参数的，因为Python会提供给它。这个特殊的变量引用的是对象本身，按照管理，它的名字就是 self 。
+
+原理：调用 myClass 的对象 myobject 中的方法 method 时，有：myobject.method(arg1, arg2)，在Python中会转化为：myClass.method(myobject, arg1, arg2)。
+
+### 类
+
+最简单的类的定义如下所示：
+
+```python
+class Person:
+    pass
+
+p = Person()
+print(p)
+```
+
+输出：
+
+```
+<__main__.Person object at 0x7f2f4bfe05f8>
+```
+
+我们使用 class 语句来创建一个类，定义它的名字。接下来一个缩进的语句块表示类的主体。我们使用 pass 语句来说明一个空的类主体。
+
+然后我们创建这个类的一个对象（接着会说明对象的创建更多的信息），使用这个类的名字和一对括号。通过打印这个对象，我们确认了这个变量的类型，它告诉我们一个 Person 类的对象在__main__模块中。可以发现还能够打印出这个对象在你计算机内存中的地址。
+
+### 方法
+
+在类主体当中声明方法：
+
+```python
+class Person:
+    def greeting(self):
+        print("hello.")
+
+p = Person()
+p.greeting()
+```
+
+输出：
+
+```
+hello.
+```
+
+值得注意的是，虽然在调用对象方法的时候不需要传递值给self参数，但是在定义的时候还是需要将 self 作为第一个参数。
+
+### __init__方法
+
+在Python的类当中有很多方法名字具有特殊的意义。__init__方法在一个对象实例化的时候会立即运行，这个方法可以用于当你创建这个类的对象的时候做一些初始化的工作。（也就是构造函数/构造方法）
+
+例子：
+
+```python
+class Person:
+    def __init__(self, name):
+        self.name = name
+    
+    def greeting(self):
+        print("My name is", self.name)
+
+p = Person("SunnyChen")
+p.greeting()
+```
+
+输出：
+
+```
+My name is SunnyChen
+```
+
+### 类变量和对象变量
+
+类和对象的数据部分——字段，实际上只是绑定在类和对象的命名空间当中的普通变量。这意味着这些名字只在类和对象的上下文中才有效。有两种不同的字段——类变量和对象变量，区分它们的区别在于，是类还是对象拥有这个变量。
+
+类变量（class variables）是共享的，可以被所有该类的实例所访问到，并且只有一份类变量的拷贝，当任意一个对象对其作出改变时，这个改变会被所有其它的实例所见。
+
+对象变量（object variables）是被每个独立的类的对象/实例所拥有的，每个对象都有自己的一份字段的拷贝，每个对象互相之间不会共享这个变量。
+
+例子：
+
+```python
+class robot:
+    # 类变量
+    robot_count = 0
+
+    def __init__(self, name):
+        # 初始化实例变量
+        self.name = name
+        robot.robot_count += 1
+
+        print("robot", self.name, "has generated")
+
+    def destroy(self):
+        robot.robot_count -= 1
+        if robot.robot_count == 0:
+            print("The last robot", self.name, "has destroyed")
+        else:
+            print(self.name, "has destroyed")
+
+    def greetings(self):
+        print("Robot", self.name)
+
+    # 类方法，同样也是一个静态方法
+    # 参数列表必须以cls开头
+    @classmethod
+    def getRobotCount(cls):
+        return cls.robot_count
+
+r1 = robot("R2-D2")
+r1.greetings()
+r2 = robot("C3PO")
+r2.greetings()
+
+print("There are", robot.getRobotCount(), "robots")
+
+r1.destroy()
+r2.destroy()
+
+print("There are", robot.getRobotCount(), "robots")
+```
+
+输出：
+
+```
+robot R2-D2 has generated
+Robot R2-D2
+robot C3PO has generated
+Robot C3PO
+There are 2 robots
+R2-D2 has destroyed
+The last robot C3PO has destroyed
+There are 0 robots
+```
+
+在上述的例子中，robot_count属于类变量（在字段空间中初始化，使用robot前缀来引用），name属于实例变量（使用self前缀来引用并且在__init__方法中初始化）。getRobotCount是类方法，可以使用classmethod或者staticmethod装饰器来说明。实际上，你可以将装饰器想象为调用一个包装器（Wrapper）函数的快捷方式，因此启用 @classmethod 装饰器等价于调用：
+
+getRobotCount = classmethod(getRobotCount)
+
+一定要记住，你引用同一个对象的变量和方法一定要使用self前缀。这称为属性引用（attribute reference）。
+
+在类以及类的方法当中，也可以使用DocString，在运行时可以使用robot.__doc__或者robot.getRobotCount.__doc__来访问各自的docstring。
+
+Python默认所有的类成员都是公有的。只有一个例外：你所定义的数据成员的名字使用双下划线来开头，则Python会将其作为一个私有成员来看待。
+
+因此，你可以遵循这个约定：只在类和对象内部使用的变量使用下划线开头，而其他公共的变量则不是。当然，这只是一个约定，Python并不强制如此（双下划线开头除外）。
+
+对于C++/Java/C#程序员的提示：Python中所有的类成员（包括数据成员）都是公有的，并且所有的方法都是虚拟的。
+
+### 继承（inheritance）
+
+实现类之间的类与子类的关系，可以使用继承的方法。子类之间的相同的成员可以放在父类当中，当需要添加一些共有的成员时，就可以直接在父类上添加。Python同样支持多态性，也就是说，可以使用父类的类型来引用不同的子类，子类对象可以被看作是父类的实例。在任何情况下，只要父类希望，子类型都可以被替换。
+
+例子：
+
+```python
+class SchoolMember:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+        print("Initial SchoolMember {}".format(self.name))
+
+    def get_details(self):
+        print("Name: {}; Age: {}".format(self.name, self.age))
+
+
+class Teacher(SchoolMember):
+    def __init__(self, name, age, salary):
+        SchoolMember.__init__(self, name, age)
+        self.salary = salary
+        print("Initial Teacher {}".format(self.name))
+
+    def get_details(self):
+        print("Teacher: Name: {}; Age: {}; Salary: {}".format(self.name, self.age, self.salary))
+
+
+class Student(SchoolMember):
+    def __init__(self, name, age, marks):
+        SchoolMember.__init__(self, name, age)
+        self.marks = marks
+        print("Initial Student {}".format(self.name))
+
+    def get_details(self):
+        print("Student: Name: {}; Age: {}; Marks: {}".format(self.name, self.age, self.marks))
+
+
+t = Teacher("Bob", 40, 50000)
+s = Student("Mary", 22, 90)
+
+members = [t, s]
+
+for m in members:
+    m.get_details()
+```
+
+输出：
+
+```
+Initial SchoolMember Bob
+Initial Teacher Bob
+Initial SchoolMember Mary
+Initial Student Mary
+Teacher: Name: Bob; Age: 40; Salary: 50000
+Student: Name: Mary; Age: 22; Marks: 90
+```
+
+声明一个子类继承一个父类，在子类声明名字后加上一个括号其中为所要继承的父类的名字（括号中的称为继承元组），如： class SubClass(BaseClass): 。在子类的构造方法中，必须显式的调用父类的构造方法来初始化公共的成员，需要注意调用父类的构造方法时也要显式的传递self参数。如果我们没有在子类中定义__init__方法，那么Python会自动调用父类的构造方法。
+
+上面提到过，Python所有的类方法都是虚拟的，因此子类可以重写父类中所有的方法，不需要显式指定重写，只需要名字相同即可。
+
+只需要记住，Python永远从子类中先寻找对应的方法，如果没有找到，则会调用父类中的方法。如果想要调用父类的方法，则： SchooolMember.get_details(s) 即可。
+
+如果继承元组中有多个父类，那么称为多重继承（multiple ingeritance）。
