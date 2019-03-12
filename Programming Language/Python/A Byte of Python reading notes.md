@@ -1559,3 +1559,163 @@ print(text)
 ```
 
 需要注意的是，需要保证只有在以文本文件模式打开文件的时候才指定编码的模式。当我们写程序的过程中使用了Unicode的字符时（在字符串前以'u'标明），并且在需要的地方（如文件读写）标明。建议此时你在程序的开头加上注释如：# encoding = utf-8。
+
+## 异常
+
+### 异常处理
+
+我们可以使用 try..except 语句来处理异常。一般来说我们将通常的语句放在try语句块中，而把异常处理放在处理块当中。
+
+例子：
+
+```python
+try:
+    text = input("Enter: ")
+except EOFError:
+    print("EOFError")
+except KeyboardInterrupt:
+    print("KeyboardInterrupt")
+else:
+    print(text)
+```
+
+输出：
+
+```
+# 按下 ctrl + d
+Enter: EOFError
+
+# 按下 ctrl + c
+Enter: ^CKeyboardInterrupt
+
+Enter: test
+test
+```
+
+except 语句块中可以处理单一的错误或者异常，或者是用括号括起来的一系列的异常。如果没有给出特定的错误或异常的名字，那么它会处理所有的错误和异常。
+
+如果一个错误或者异常没有被处理，那么默认的Python异常处理会被调用并且停止程序的运行，并打印一条错误的信息。
+
+在 try..except 块中，还可以有一个 else 的语句块，这个 else 的语句块是当没有异常发生的时候执行的。
+
+### 异常抛出
+
+你可以使用 raise 语句指定错误/异常的名字来抛出异常，此时异常的对象会被抛出。抛出的错误或者异常必须是 Exception 类的子类。这种方法在一些自定义的异常中会用到，因此你需要保证异常类必须继承 Exception 类。
+
+例子：
+
+```python
+class ShortInputException(Exception):
+    def __init__(self, length, atleast):
+        Exception.__init__(self)
+        self.length = length
+        self.atleast = atleast
+
+try:
+    text = input("Enter: ")
+    if(len(text) < 3):
+        raise ShortInputException(len(text), 3)
+except EOFError:
+    print("EOFError")
+except ShortInputException as ex:
+    print("ShortInputException: input was {} long, expected at least {}".format(ex.length, ex.atleast))
+else:
+    print(text)
+```
+
+输出：
+
+```
+$ python exceptions_raise.py
+Enter: a
+ShortInputException: input was 1 long, expected at least 3
+
+$ python exceptions_raise.py
+Enter: abc
+abc
+```
+
+使用 as 可以指定抛出该异常的具体对象，上面的例子中是 ex 。
+
+### Try..Finally语句
+
+假设你在程序中读取一个文件，你怎么保证无论是否发生异常，文件对象都已经被正确的关闭？这可以使用 finally 块来完成。
+
+例子：
+
+```python
+import sys
+import time
+
+f = None
+try:
+    f = open("text.txt")
+    while True:
+        line = f.readline()
+        if len(line) == 0:
+            break
+        print(line, end = '')
+        sys.stdout.flush()
+        print("Press ctrl+C now")
+        time.sleep(2) # Sleeping 2 seconds
+except IOError:
+    print("Could not find the file")
+except KeyboardInterrupt:
+    print("Cancelled")
+finally:
+    if f:
+        f.close()
+    print("(Cleanning up: Close the file)")
+```
+
+输出：
+
+```
+The more you buy.
+Press ctrl+C now
+The more you saved.
+Press ctrl+C now
+^CCancelled
+(Cleanning up: Close the file)
+```
+
+time.sleep() 函数可以使程序睡眠对应的时间，参数中的单位为秒。还可以注意到，finally语句中的 if f: 。在Python中，所有值为0或者 None 的变量都在条件判断中视为 False 。 sys.stdout.flush() 的作用是刷新输出流，使得它能够被立即打印到屏幕上
+
+finally 语句的内容是无论是否发生异常，都会执行的语句。通常用在资源清理的场合当中。
+
+### with语句
+
+在 try 语句块中获取资源，并且在 finally 语句块中释放它，是一个常用的方法。同时，还存在一个 with 语句块，可以以更为简洁的方式来完成：
+
+```python
+with open("text.txt") as f:
+    for line in f:
+        print(line, end = '')
+```
+
+在程序中使用 with 语句的作用是，将关闭文件夹的工作自动在 with open 中完成。在背后所发生的事情实际上是， with 语句使用了一个协议，它会获取在 open 语句中返回的对象，在这里可以将其称为"thefile"。在 with 语句块当中，它将会在语句块的开头调用thefile.__enter__并且在语句块的结束进行thefile.__exit__的调用。
+
+### 有关异常的总结
+
+Python中try/except/else/finally语句的完整格式：
+
+```python
+try:
+    # Normal execution block
+except A:
+    # Handle exception A
+except B:
+    # Handle exception B
+except:
+    # Handle other exception
+else:
+    # If no exception, get here
+finally:
+    # Whether there is a exception or not, get here
+```
+
+1. 所有语句的正常出现顺序：try -> except X -> except -> else -> finally。
+2.  else 以及 finally 语句是可选的。
+3.  else 语句的存在必须有 except 存在为前提。
+4. 异常处理首先查找特定的异常处理块，如果没有则跳转到 except: 语句中执行。
+5. 慎用 except: 语句，有可能会掩盖一些错误。
