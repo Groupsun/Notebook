@@ -1434,3 +1434,128 @@ Student: Name: Mary; Age: 22; Marks: 90
 只需要记住，Python永远从子类中先寻找对应的方法，如果没有找到，则会调用父类中的方法。如果想要调用父类的方法，则： SchooolMember.get_details(s) 即可。
 
 如果继承元组中有多个父类，那么称为多重继承（multiple ingeritance）。
+
+## 输入输出
+
+前面已经接触过了用户输入的函数 input() 以及输出到屏幕的 print() 函数。对于输出来说，我们还可以使用几种 str 类中的方法。比如，我们可以使用 rjust 方法来获得一个右对齐到指定宽度的字符串。
+
+另外一种输入输出常用的类型是文件IO。
+
+### 用户输入
+
+下面举一个判断用户输入是否回文例程：
+
+```python
+def reverse(text):
+    return text[::-1]
+
+
+def is_palindrome(text):
+    return text == reverse(text)
+
+
+something = input("Enter the string: ")
+if is_palindrome(something):
+    print("is palindrome")
+else:
+    print("isn't palindrome")
+```
+
+输出：
+
+```
+Enter the string: abcba
+is palindrome
+
+Enter the string: aab
+isn't palindrome
+```
+
+### 文件操作
+
+你可以通过创建 file 类的对象，并通过它的 read ， readline 或者 write 方法来读写文件。读写文件的权限取决于你打开文件时声明的模式。最后，当你完成文件操作后，你需要调用 close 方法来高速Python已经完成了对这个文件的操作。
+
+例子：
+
+```python
+text = '''\
+The more you buy.
+The more you saved.
+Nvidia.
+'''
+
+# w 表示写入模式
+f = open("text.txt", "w")
+f.write(text)
+f.close()
+
+# 默认为 r ，读模式
+f = open("text.txt")
+while True:
+    line = f.readline()
+    if len(line) == 0:
+        break
+
+    print(line, end = '')
+f.close()
+```
+
+输出：
+
+```
+The more you buy.
+The more you saved.
+Nvidia.
+```
+
+其中，读写的模式有：读模式（'r'，默认）、写模式（'w'）、追加写模式（'a'）。并且我门还可以指定我们要读写的是文本（'t'）还是二进制码（'b'）。 open() 函数默认的是 'rt' 模式。与文件读写模式更多相关的信息参考：https://docs.python.org/3/library/functions.html?highlight=open#open
+
+### Pickle
+
+Python提供一个标准的 pickle 模块，可以存储任何纯的Python的对象在一个文件里，并且在之后将它取回。这叫做持久的（persistently）存储对象。
+
+例子：
+
+```python
+import pickle
+
+addressfile = "address.data"
+address = ["C12-216", "C13-109", "C4-408"]
+
+f = open(addressfile, "wb")
+pickle.dump(address, f)
+f.close()
+
+del address
+
+f = open(addressfile, "rb")
+address = pickle.load(f)
+print(address)
+f.close()
+```
+
+输出：
+
+```
+['C12-216', 'C13-109', 'C4-408']
+```
+
+使用 pickle 模块的 dump 函数，目标是一个使用 wb 模式打开的文件，将所需要的对象保存进文件当中，这个过程称为封装（pickling）。接着，使用 rb 模式打开对应的文件，使用 pickle 模块的 load 函数加载对象。这个过程称为拆封（unpickling）。
+
+### Unicode
+
+Python3默认将字符串变量以Unicode编码的形式存储。当数据在互联网之间传输时，我们需要将其以字节的方式传送。将Unicode转换成字节的过程就是编码的过程。一种受欢迎的编码的方法是UTF-8。可以通过在 open 函数中使用一个简单的关键字参数来读写UTF-8码：
+
+```python
+# encoding=utf-8
+import io
+
+f = io.open("abc.txt", "wt", encoding="utf-8")
+f.write(u"Imagine non-English language here")
+f.close()
+
+text = io.open("abc.txt", encoding="utf-8").read()
+print(text)
+```
+
+需要注意的是，需要保证只有在以文本文件模式打开文件的时候才指定编码的模式。当我们写程序的过程中使用了Unicode的字符时（在字符串前以'u'标明），并且在需要的地方（如文件读写）标明。建议此时你在程序的开头加上注释如：# encoding = utf-8。
