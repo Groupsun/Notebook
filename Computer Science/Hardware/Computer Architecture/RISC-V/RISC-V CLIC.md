@@ -8,6 +8,7 @@ CLIC，Core-Local Interrupt Controller，即内核本地的中断控制器。
 - 特权模式：S-mode
 - 用户模式：U-mode
 - WARL：Write Any Read Legal
+- XLEN：处理器字长
 
 # 1. 背景以及动机
 
@@ -162,3 +163,93 @@ WARL的nvbits位用于表示中断的模式是向量还是非向量的。
 CLIC包含了mip以及mie中提供的16个快速的本地中断，因此在启动CLIC时，这16个中断将不再在mip/mie中可见。
 
 现有的计时中断（mtip/stip/utip）、软件中断（msip/ssip/usip）以及外部中断（meip/seip/ueip）输入将被看作是额外的本地中断源，它们的特权模式、中断等级以及优先级可以使用存储映射的clicintctl[i]寄存器来定义：对于所有的meip/mtip/msip/seip/stip/ssip/ueip/utip/usip，都可以提供一个8位的寄存器，格式如上所述。
+
+# 3. CLIC CSRs
+
+这一节描述与CLIC相关的CSRs。在CLINT模式下，中断的行为只能在支持CLINT的系统上具有软件兼容性。
+
+CLIC的中断处理相关的CSRs在下面列举，在原生CLINT的基础上，增加了几个寄存器。
+
+```
+       Number  Name         Description
+       0xm00   mstatus      Status register
+       0xm02   medeleg      Exception delegation register
+       0xm03   mideleg      Interrupt delegation register (INACTIVE IN CLIC MODE)
+       0xm04   mie          Interrupt-enable register     (INACTIVE IN CLIC MODE)
+       0xm05   mtvec        Trap-handler base address / interrupt mode
+(NEW)  0xm07   mtvt         Trap-handler vector table base address
+       0xm40   mscratch     Scratch register for trap handlers
+       0xm41   mepc         Exception program counter
+       0xm42   mcause       Cause of trap
+       0xm43   mtval        Bad address or instruction
+       0xm44   mip          Interrupt-pending register    (INACTIVE IN CLIC MODE)
+ (NEW) 0xm45   mnxti        Interrupt handler address and enable modifier
+ (NEW) 0xm46   mintstatus   Current interrupt levels
+ (NEW) 0xm48   mscratchcsw  Conditional scratch swap on priv mode change
+ (NEW) 0xm49   mscratchcswl Conditional scratch swap on level change
+
+         m is the nibble encoding the privilege mode (M=0x3, S=0x1, U=0x0)
+```
+
+## 3.1 mstatus的相关改动
+
+在CLINT模式下，mstatus是不能改变的（不能通过软件方式改变）。在CLIC模式下，mstatus中的mpp以及mpie可以通过mcause寄存器中的某些域来访问。
+
+## 3.2 medeleg/mideleg的相关改动
+
+在CLIC模式下，CLIC的中断输入配置clicintcfg[i]寄存器指定每个中断应采用的特权模式。因此mideleg寄存器在CLIC模式下不再使用。如果系统中同时实现了CLIC以及CLINT模式，那么mideleg仍然可见并且当CLIC切换到CLINT模式时可以进行访问并改变。
+
+在CLIC模式下，mdeleg的功能和CLINT模式下一致。
+
+## 3.3 mie/mip的相关改动
+
+在CLIC模式下，mie硬编码为0，而由另一个存储映射的中断使能寄存器：clicintie[i]代替。
+
+在CLIC模式下，mip硬编码为0，而由另一个存储映射的中断等待寄存器：clicintip[i]代替。
+
+在同时实现了CLIC以及CLINT模式的系统中，mie和mip保持可见，并且在切换到CLINT模式下可以访问。
+
+## 3.4 新的mtvec模式
+
+新的中断处理模式通过在mtvec寄存器中编码新的状态来实现。在新添加的状态中，mtvec的最低位可以是10或者11。在这些模式下，异常处理向量基地址保存在mtvec当中，并且以64字节或者更大的2的幂大小字节边界对齐。
+
+```
+ mtvec   Action on Interrupt
+ aaaa00  pc := OBASE                (original non-vectored CLINT mode)
+ aaaa01  pc := OBASE + 4 * exccode      (original vectored CLINT mode)
+ 000010  pc := NBASE                          (non-vectored CLIC mode)
+ 000011  pc := M[TBASE + XLEN/8 * exccode)] & ~1  (vectored CLIC mode)
+ xxxx1?  (xxxx!=0000)                            Reserved
+
+ OBASE = mtvec[XLEN-1:2]<<2 # Original vector base was at least 4-byte aligned.
+ NBASE = mtvec[XLEN-1:6]<<6 # New vector base is at least 64-byte aligned.
+ TBASE = mtvt[XLEN-1:6]<<6  # Trap vector table base is at least 64-byte aligned.
+```
+
+往mtvec中写入一个最低两位为10的数，则选择的是非向量的CLIC模式。对于所有的中断，处理器会跳转到mtvec中所保存的高XLEN-6位的异常处理程序地址。
+
+往mtvec中写入一个最低两位为11的数，则选择的是向量的CLIC模式。当中断触发时，处理器会切换到中断处理的特权模式下，并且在mcause中将硬件向量模式位minhv置为1，然后根据mtvt寄存器中的中断向量表入口地址，在内存中的中断向量表中获取一个XLEN位的中断向量，跳转到相应的中断处理程序中执行。如果取地址成功，处理器会清除中断处理程序的低位（对齐操作），并且将PC设置到该中断处理程序的地址，然后清楚mcause中的人minhv位。概括来说就是：
+
+
+```
+pc := M[TBASE + XLEN/8 * exccode] & ~1
+
+# 下面就是不同字长处理器下的中断向量表结构：
+           # Vector table layout for RV32 (4-byte function pointers)
+  mtvt ->  0x800000 # Interrupt 0 handler function pointer
+           0x800004 # Interrupt 1 handler function pointer
+           0x800008 # Interrupt 2 handler function pointer
+           0x80000c # Interrupt 3 handler function pointer
+
+           # Vector table layout for RV64 (8-byte function pointers)
+  mtvt ->  0x800000 # Interrupt 0 handler function pointer
+           0x800008 # Interrupt 1 handler function pointer
+           0x800010 # Interrupt 2 handler function pointer
+           0x800018 # Interrupt 3 handler function pointer
+```
+
+在实现当中，可能只支持CLINT或者CLIC模式。如果只支持CLINT模式，那么在mtvec中的第1位的写入会忽略，并且永远设置为0。如果只支持CLIC模式，那么在mtvec中的第1位的写入同样会被忽略，并且永远设置为1。CLIC模式下，mtvec的第2 ～ 5位硬编码为0。
+
+为了安全性考虑，对中断向量地址获取的方法通过存储映射的方式来进行。那么在获取中断向量的过程中使用的加载指令可能会触发地址未对齐的异常，通过mepc保存发生错误的指令地址，在异常处理结束后返回执行。
+
+在向量和非向量模式的CLIC中，同步的异常永远跳转到NBASE。
