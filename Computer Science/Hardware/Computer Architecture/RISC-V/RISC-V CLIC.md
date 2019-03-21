@@ -9,6 +9,7 @@ CLIC，Core-Local Interrupt Controller，即内核本地的中断控制器。
 - 用户模式：U-mode
 - WARL：Write Any Read Legal
 - XLEN：处理器字长
+- SHV：selectively vectored interrupts，所有的中断共用一个中断向量
 
 # 1. 背景以及动机
 
@@ -252,4 +253,105 @@ pc := M[TBASE + XLEN/8 * exccode] & ~1
 
 为了安全性考虑，对中断向量地址获取的方法通过存储映射的方式来进行。那么在获取中断向量的过程中使用的加载指令可能会触发地址未对齐的异常，通过mepc保存发生错误的指令地址，在异常处理结束后返回执行。
 
-在向量和非向量模式的CLIC中，同步的异常永远跳转到NBASE。
+在向量和非向量模式的CLIC中，同步异常永远跳转到NBASE。
+
+## 3.5 新的mtvt寄存器
+
+WARL的XLEN位的mtvt寄存器保存异常中断向量表的入口基地址，以64字节或者更大的2的幂字节大小对齐。mtvt中的低0到6位是保留的。
+
+在同时支持CLINT以及CLIC模式的系统中，mtvt寄存器在CLINT模式下仍然可访问（但是没有任何作用）。
+
+## 3.6 mepc的相关改动
+
+mepc寄存器在两种模式下的行为一致，保存发生中断的指令的地址。
+
+## 3.7 mcause的相关改动
+
+在CLINT以及CLIC模式当中，mcause寄存器会在中断或者同步异常发生时写入，写入的值代表发生中断或者异常的原因是什么。在CLIC模式当中，mcause同时还被扩展来保存有关被中断的上下文更多的信息，用来减少在MRET执行时保存以及恢复上下文的开销。在CLIC模式下，mcause同时还会增加一些状态来记录异常处理过程的信息。
+
+```
+mcause
+位      域名称        描述
+XLEN-1 Interrupt    中断=1, 异常=0
+   30  minhv        硬件向量中断模式开启=1
+29:28  mpp[1:0]     异常发生前的特权模式，和mstatus.mpp相同
+   27  mpie         异常发生前的全局中断使能位，和mstatus.mpie相同
+26:24  (reserved)
+23:16  mpil[7:0]    异常发生前的中断等级
+15:10  (reserved)
+  9:0  Exccode[9:0] 异常/中断的编码
+```
+
+mcause.mpp以及mcause.mpie域是mstatus.mpp以及mstatus.mpic的镜像，放入mcause中来减少上下文的保存和恢复的代码大小。
+
+如果当前的hart运行在某个特权模式（pp）下，并且处于某个中断级别（pil）。此时某个使能的中断正在等待，该中断级别比当前中断级别要更高或者处于更高的特权级别，则会立即跳转到新的中断特权模式（m）以及中断级别（il）中执行。
+
+mepc此时会设置为被抢占的中断的指令的地址，mcause将异常前的特权模式、中断级别以及中断使能位保存进mcause当中，与此同时还有中断的exccode。
+
+在同时支持CLINT以及CLIC模式的系统中，面向CLIC的域（minhv，mpp，mpil，mpie）会在CLINT模式下硬编码为0，保证向后的兼容性。当CLINT的模式写入到mtvec当中时，mcause中新的状态域（mhinv以及mpil）会硬编码为0。其他新的mcause域，mpp以及mpie也会被硬编码为0，然而在mstatus寄存器中则以原生的CLINT框架定义进行更新，不会被清零。
+
+特权模式下的scause寄存器只有一个spp位（先前只可能是特权模式或者机器模式），是sstatus.spp的镜像，同时用户模式下的ucause寄存器没有upp位，与CLINT框架中的相同。
+
+```
+scause
+ 位      域名称        描述
+ XLEN-1 Interrupt    中断=1, 异常=0
+    30  sinhv        硬件向量中断模式开启=1
+    29  (reserved)
+    28  spp          异常发生前的特权模式，和sstatus.mpp相同
+    27  spie         异常发生前的全局中断使能位，和sstatus.mpie相同
+ 26:24  (reserved)
+ 23:16  spil[7:0]    异常发生前的中断等级
+ 15:10  (reserved)
+   9:0  exccode[9:0] 异常/中断的编码
+
+ ucause
+ 位      域名称        描述
+ XLEN-1 Interrupt    中断=1, 异常=0
+    30  uinhv        硬件向量中断模式开启=1
+ 29:28  (reserved)
+    27  upie         异常发生前的全局中断使能位，和ustatus.mpie相同
+ 26:24  (reserved)
+ 23:16  upil[7:0]    异常发生前的中断等级
+ 15:10  (reserved)
+   9:0  exccode[9:0] 异常/中断的编码
+```
+
+## 3.8 下一个中断处理地址以及中断使能寄存器mnxti
+
+mnxti寄存器被软件用于服务下一个在同一个特权模式下触发的中断，它的中断级别比保存的中断上下文要高，可以使得不需要在中断时刷新整个流水线并且保存、恢复上下文。mnxti寄存器设计于使用CSRRSI/CSRRCI指令来访问，其保存的值是中断向量表的入口以及写回更新中断使能的状态。此外，访问mnxti具有更新中断上下文状态的副作用。
+
+对mnxti的读取会返回0，表示没有合适的中断去服务或者最高级别的中断是SHV或者系统不是在CLIC模式下。如果返回的是非0值，那么这个值是软件异常向量处理中的中断向量表入口地址。
+
+如果CSR指令访问mnxti包括一个写的操作，那么mstatus也是在该操作中作为读-修改-写的寄存器，mcause的exccode域和mintstatus的mil域同时会更新。
+
+mnxti会在异常发生后，进入异常处理程序后继续使用。
+
+在CLINT模式下，读mnxti永远返回0，对mintstatus以及mcause更新没有作用。在CLIC模式下对mstatus进行更新。
+
+## 3.9 新的中断状态寄存器mintstatus
+
+新的机器模式寄存器mintstatus，保存这每个支持的特权模式下当前活动的中断的等级。这些域是只读的。暴露这些域的主要原因是为了支持调试。
+
+```
+mintstatus fields
+31:24 mil
+23:16 (reserved) # To follow pattern of others.
+15: 8 sil
+ 7: 0 uil
+```
+
+同样，还有在特权模式以及用户模式下的寄存器sintstatus以及uintstatus：
+
+```
+sintstatus fields
+31:16 (reserved)
+15: 8 sil
+ 7: 0 uil
+
+uintstatus fields
+31: 8 (reserved)
+ 7: 0 uil
+```
+
+在支持两种模式的系统中，minstatus在CLINT模式下仍然是可访问的。
