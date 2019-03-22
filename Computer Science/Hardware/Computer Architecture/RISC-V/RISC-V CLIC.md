@@ -356,3 +356,45 @@ uintstatus fields
 |CLICMTVECALIGN|6-13|在mtvec地址中硬编码为0的低位数|
 |CLICMNXTI|0-1|是否实现了mnxti寄存器|
 |CLICMCSW|0-1|是否实现了mscratchcsw/mscratchcswl寄存器|
+
+# 5. CLIC中断操作
+
+这一节描述CLIC中断的相关操作。
+
+## 5.1 一般中断的概览
+
+在任何时刻，一个hart以某个中断等级运行在某个特权模式下。这个hart的特权模式保存在处理器的内部，但是对于运行在这个hart中的软件来说是不可见的，但是当前的中断等级可以在minststatus寄存器中可见。中断等级为0表示正在执行的程序是正常的程序流而不是中断服务程序。
+
+在特权模式x当中，如果全局中断使能位xie为0，那么在当前的特权模式下，所有的中断都会关闭，但是在更高特权等级中，使能的等待中断可以抢占当前模式的程序执行。如果xie为1，那么抢占当前程序运行的可以是：同一特权模式下更高等级的使能等待的中断，或者更高特权模式下的使能等待中断。
+
+在当前存在的RISC-V机制当中，当一个中断或者同步异常发生时，特权模式和中断等级会修改以反映处理该异常的特权模式和中断等级。而处理中断所在的特权模式的全局中断使能位也会被清零，来防止被同一模式下其他更高等级的中断抢占。
+
+下面的表格总结了中断所有的行为：当前的p/ie/il域表示当前的特权模式P（软件不可见）、mstatus中的中断使能位ie以及mintstatus中的中断级别il；CLIC中的priv、level以及id域表示正在CLIC中触发的最高等级的中断，它的中断处理程序所在的特权模式nP，nL则表示该中断的中断等级，id表示该中断的id；Current'域表示之后的p/ie/il域（中断可能触发也可能不触发）；pc中的v表示硬件向量的使用；cde表示mcause的excode域；Previous域则表示的是中断触发前的程序的上下文域（mcause以及mepc）。
+
+```
+Current  |      CLIC          |->      Current'          Previous
+p/ie/il  | priv level   id    |->    p/ie/il  pc  cde   pp/il/ie epc
+P  ?  ?  | nP<P     ?      ?  |->    - -  -   -   -     -  -  -  -   # Interrupt ignored
+P  0  ?  | nP=P     ?      ?  |->    - -  -   -   -     -  -  -  -   # Interrupts disabled
+P  1  ?  | nP=P     0      ?  |->    - -  -   -   -     -  -  -  -   # No interrupt
+P  1  L  | nP=P   0<nL<=L  ?  |->    - -  -   -   -     -  -  -  -   # Interrupt ignored
+P  1  L  | nP=P   L<nL    id  |->    P 0  nL  V   id    P  L  1  pc  # Horizontal interrupt taken
+P  ?  ?  | nP>P     0      ?  |->    - -  -   -   -     -  -  -  -   # No interrupt
+P  e  L  | nP>P   0<nL    id  |->   nP 0  nL  V   id    P  L  e  pc  # Vertical interrupt taken
+```
+
+## 5.2 中断处理当中的关键部分
+
+为了在同一个特权模式下实现不同中断等级处理之间的关键部分，在任何中断等级下的中断控制器可以清除该模式下的中断使能位：xie，来防止同一个特权模式下的其他中断发生。
+
+## 5.3 同步异常的处理
+
+同一个特权模式下的同步异常，与触发异常的指令所在的中断等级相同。
+
+更高特权模式下的同步异常，其处理程序处于更高特权模式下，且中断等级为0。
+
+## 5.4 从中断处理程序中返回
+
+MRET指令用于从特权模式m当中的中断处理程序中返回。返回后的程序执行位于保存在mcause.mpp中保存的特权模式，返回程序的地址从mpec中取出，而中断等级则保存在mcause.mpil中，全局中断使能位则在mcause.mpie中。
+
+MRET指令不会改变mcause中断额mpil域。而mcause.mpp以及mcause.mpie域则在执行后修改。
