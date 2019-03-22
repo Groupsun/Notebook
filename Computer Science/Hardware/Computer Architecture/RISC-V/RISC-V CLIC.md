@@ -61,28 +61,12 @@ CLIC有一个内存映射的全局配置寄存器：cliccfg，它用来定义cli
 
 cliccfg寄存器有3个WARL域，一个2位的nmbits域，一个4位的nlbits域，以及1个nvbits域，再加上一个保留的WARL域硬编码位0的保留位：
 
-<table>
-    <tr>
-        <th>bits</th>
-        <th>field</th>
-    </tr>
-    <tr>
-        <th>7</th>
-        <th>reserved (WARL 0)</th>
-    </tr>
-    <tr>
-        <th>6:5</th>
-        <th>nmbits[1:0]</th>
-    </tr>
-    <tr>
-        <th>4:1</th>
-        <th>nlbits[3:0]</th>
-    </tr>
-    <tr>
-        <th>0</th>
-        <th>nvbits</th>
-    </tr>
-</table>
+|bits|field|
+|:---:|:---:|
+|7|reserved (WARL 0)|
+|6:5|nmbits[1:0]|
+|4:1|nlbits[3:0]|
+|0|nvbits|
 
 cliccfg接收到reset信号时会重置为0（所有的中断都位于机器模式下，且级别为255）。
 
@@ -178,7 +162,7 @@ CLIC的中断处理相关的CSRs在下面列举，在原生CLINT的基础上，�
        0xm03   mideleg      Interrupt delegation register (INACTIVE IN CLIC MODE)
        0xm04   mie          Interrupt-enable register     (INACTIVE IN CLIC MODE)
        0xm05   mtvec        Trap-handler base address / interrupt mode
-(NEW)  0xm07   mtvt         Trap-handler vector table base address
+ (NEW) 0xm07   mtvt         Trap-handler vector table base address
        0xm40   mscratch     Scratch register for trap handlers
        0xm41   mepc         Exception program counter
        0xm42   mcause       Cause of trap
@@ -355,3 +339,20 @@ uintstatus fields
 ```
 
 在支持两种模式的系统中，minstatus在CLINT模式下仍然是可访问的。
+
+# 4. CLIC实现的参数
+
+|名称|数值范围|描述|
+|:---:|:---:|:---:|
+|CLICANDCLINT|0-1|是否实现CLINT模式？|
+|CLICPRIVMODES|1-3|数值代表特权模式：1=M，2=M/U，3=M/S/U|
+|CLICLEVELS|2-256|数值代表中断的等级，包括0|
+|CLICINPUTS|4-1024|总是带有MSIP，MTIP，MEIP以及CSIP寄存器|
+|CLICMAXID|12-1023|最大的中断ID|
+|CLICINTCTLBITS|2-8|在clicintctl[i]中实现了的位数|
+|CLICCFGMBITS|0-ceil(lg2(CLICPRIVMODES))|在cliccfg.nmbits中实现了的位数|
+|CLICCFGLBITS|0-ceil(lg2((lg2(CLICLEVELS))))|在cliccfg.nlbits中实现了的位数|
+|CLICSELHVEC|0-1|是否支持SHV|
+|CLICMTVECALIGN|6-13|在mtvec地址中硬编码为0的低位数|
+|CLICMNXTI|0-1|是否实现了mnxti寄存器|
+|CLICMCSW|0-1|是否实现了mscratchcsw/mscratchcswl寄存器|
