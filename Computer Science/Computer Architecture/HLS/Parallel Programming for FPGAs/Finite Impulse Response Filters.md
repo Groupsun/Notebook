@@ -1,7 +1,5 @@
 # 有限脉冲响应滤波器
 
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
-
 # 概览
 
 有限脉冲响应（Finite Impulse Response，FIR）滤波器在数字信号处理（digital signal processing，DSP）应用领域当中是非常常用的。它非常适合实现为硬件的形式，因为它们的实现可以是高度优化的结构。主要体现在它们是对连续信号元素的线性变换，这对于一些数据结构来说很容易进行映射（比如FIFO或者抽头延迟线），而这些数据结构也可以很容易的在硬件上高效实现。
