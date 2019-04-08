@@ -603,3 +603,86 @@ wire w: {a:UInt , b: UInt }
 w.a <= mux(c, y, x.a)
 w.b <= x.b
 ```
+
+## Memories
+
+memory是对硬件存储的抽象表达。它由以下的参数表征：
+
+1. memory中的元素类型使用被动类型。
+2. 一个正整数表示memroy中的元素数量。
+3. 若干命名的端口，其中一个是读端口，一个是写端口，或者一个读写端口。
+4. 一个非负的整数表示读延迟，表示当读地址到来后需要多少的时钟周期可以从读端口读取相应地址的数据。
+5. 一个非负的整数表示写延迟，表示当写地址以及写如的数据到来后需要多少的时钟周期将数据写入到相应地址当中。
+6. 一个 read-under-write 标志表示当存储器同时读写同一个地址数据时的行为。
+
+下面的例子表示一个存储包含256个复数，每个复数有一个16位的有符号数表示它的实数部分和虚数部分。它带有两个读端口，r1和r2，以及一个写端口，w。它的读是组合逻辑的（读延迟为0个时钟周期），写延迟为1个时钟周期。read-under-write的行为未定义：
+
+```
+mem mymem:
+    data-type => {real:SInt<16>, imag:SInt<16>}
+    depth => 256
+    reader => r1
+    reader => r2
+    writer => w
+    read-latency => 0
+    write-latency => 1
+    read-under-write => undefined
+```
+
+上面例子中 mymem 的类型则为：
+
+```
+{ flip r1: { flip data : { real :SInt <16 >, imag :SInt <16 >} ,
+             addr : UInt <8>,
+             en: UInt <1>,
+             clk : Clock }
+  flip r2: { flip data : { real :SInt <16>, imag :SInt <16 >} ,
+             addr : UInt <8>,
+             en: UInt <1>,
+             clk : Clock }
+  flip w: { data : { real :SInt <16>, imag :SInt <16 >} ,
+            mask : { real :UInt <1>, imag :UInt <1 >},
+            addr : UInt <8>,
+            en: UInt <1>,
+            clk: Clock }}
+```
+
+### Read Ports
+
+如果一个memory声明为其元素的类型为T，内存元素个数小于或者等于2^N，那么它的读端口的类型为：
+
+```
+{flip data:T, addr:UInt<N>, en:UInt<1>, clk:Clock}
+```
+
+当en为高电平时，在addr数据有效后，经过读延迟时间即可在data中获取内存该地址的数据。如果en为低电平，则在data中的数据是未定义的。
+
+### Write Ports
+
+如果一个memory声明为其元素的类型为T，内存元素个数小于或者等于2^N，那么它的写端口的类型为：
+
+```
+{data:T, mask:M, addr:UInt<N>, en:UInt<1>, clk:Clock}
+```
+
+一般来说，写的掩码类型是memory内元素类型的镜像，只不过聚合类型中的每个基本类型只有1个大小的位宽。
+
+### Readwrite Ports
+
+```
+{wmode:UInt<1>, flip rdata:T, wdata:T, wmask:M, addr:UInt<N>, en:UInt<1>, clk:Clock}
+```
+
+wmode用于决定该端口用作读还是写。
+
+### Read Under Write Behaviour
+
+read-under-write 标志用于表示当memory中同一个地址同时读写的行为。有三种：old、new以及undefined。
+
+如果为old，那么此时会读同一个周期的数据（组合逻辑读）。
+
+如果为new，那么此时会读写入后新的数据，会有延迟存在。
+
+如果为undefined，那么此时读出的数据是未定义的。
+
+对于所有情况来说，如果memory中同一个地址数据同一个周期被多个写入端口写入，那么写入的值是未定义的。
