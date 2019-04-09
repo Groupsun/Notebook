@@ -741,3 +741,291 @@ printf(clk, condition, "a in hex: %x, b in decimal:%d.\n", a, b)
 - %%: 输出%字符
 
 同时还支持转义字符：'\n'，'\t'，'\\'，'\"'，'\''。
+
+# Expressions
+
+FIRRTL的表达式用于创建字面上的无符号以及有符号整数。
+
+## Unsigned Integers
+
+一个字面的无符号整数可以基于一个非负的整数值以及一个可选的正的位宽。下面的例子创建一个10位的无符号整数42：
+
+```
+UInt<10>(42)
+```
+
+如果省略了位宽大小，那么将会使用能容纳数值的最小位宽：
+
+```
+// 此时位宽为6
+UInt(42)
+```
+
+## Unsigned Integers from Literal Bits
+
+一个字面上的无符号整数也可以通过给定一个位表示字符串以及一个可选的位宽来创建。下面的基数是可选的：
+
+1. b：表示二进制数。
+2. o：表示八进制数。
+3. h：表示十六进制数。
+
+如果一个位宽没有给出，那么字符串中表示的数字有多少位，该无符号数就有多少位：
+
+```
+// 8位的无符号整数13
+UInt("b00001101")
+UInt("h0D")
+```
+
+如果提供的位宽比字符串中的位数要大，那么会自动进行零扩展。如果提供的位宽比字符串中的位数要小，那么会进行截断，且截断的位都必须是0。下面的例子中展示了创建一个7位的无符号整数13：
+
+```
+UInt<7>("b00001101")
+UInt<7>("o015")
+UInt<7>("hD")
+```
+
+## Signed Integers
+
+和无符号整数相似，字面上的有符号整数可以使用给定的整数值以及一个可选的位宽来创建：
+
+```
+SInt<10>(-42)
+```
+
+需要注意的是，当给定的位宽不足以使用补码的形式表示有符号数的时候，就会发生错误。如果忽略了位宽，那么会自动选择适合该有符号数的最小的位宽大小:
+
+```
+SInt(-42)
+```
+
+## Signed Integers from Literal Bits
+
+和无符号整数相似，这里不太赘述：
+
+```
+SInt("b-1101")
+SInt("h-d")
+```
+
+需要注意的有，如果提供的位宽大小不足以表示数值，那么就会产生一个错误。
+
+## References
+
+一个引用是一个简单引用之前声明的电路部件的名字。可以引用的部件包括：模块端口、结点、wire、寄存器、模块实例或者memory。
+
+下面就是引用in连接到引用out的例子：
+
+```
+module MyModule :
+    input in: UInt
+    output out : UInt
+    out <= in
+```
+
+## Subfields
+
+子域的表达式用于引用bundle中的一个字段：
+
+```
+module MyModule :
+    input in: UInt
+    output out: {a:UInt, b:UInt}
+    out.a <= in
+```
+
+## Subindices
+
+子索引用于引用向量中的其中一个元素，索引必须是非负的整数：
+
+```
+moduole MyModule :
+    input in: UInt
+    output out: UInt[10]
+    out[4] <= in
+```
+
+## Subaccesses
+
+subaccess表达式用于动态的引用向量类型表达式中的一个子元素，这个索引是需要经过计算的。最后计算的结果必须是一个无符号的整数：
+
+```
+module MyModule :
+    input in: UInt [3]
+    input n: UInt <2>
+    output out : UInt
+    out <= in[n]
+```
+
+有关subaccess表达式的连接可以使用条件连接的模型来实现：
+
+```
+module MyModule :
+    input in: UInt[3]
+    input n: UInt<2>
+    output out: UInt
+    when eq(n, UInt(0)) :
+        out <= in[0]
+    else when eq(n, UInt(1)):
+        out <= in[1]
+    else when eq(n, UInt(2)):
+        out <= in[2]
+    else :
+        out is invalid
+```
+
+下面的例子中，in连接到输出端口out的第n个元素，out的其他元素被连接到default当中：
+
+```
+module MyModule :
+    input in: UInt
+    input default : UInt [3]
+    input n: UInt <2>
+    output out : UInt [3]
+    out <= default
+    out[n] <= in
+```
+
+可以利用重写的原理来通过条件语句实现：
+
+```
+module MyModule :
+    input in: UInt
+    input default : UInt [3]
+    input n: UInt <2>
+    output out : UInt [3]
+    out <= default
+    when eq(n, UInt (0) ) :
+        out [0] <= in
+    else when eq(n, UInt (1) ) :
+        out [1] <= in
+    else when eq(n, UInt (2) ) :
+        out [2] <= in
+```
+
+如果向量是二维的情况下：
+
+```
+module MyModule :
+    input in: UInt
+    input default: UInt[2][2]
+    input n: UInt<1>
+    input m: UInt<1>
+    output out: UInt[2][2]
+    out <= default
+    out[n][m] <= in
+```
+
+等用于：
+
+```
+module MyModule :
+    input in: UInt
+    input default : UInt [2][2]
+    input n: UInt <1>
+    input m: UInt <1>
+    output out : UInt [2][2]
+    out <= default
+    when and (eq(n, UInt (0) ), eq(m, UInt (0) )) :
+        out [0][0] <= in
+    else when and (eq(n, UInt (0) ), eq(m, UInt (1) )) :
+        out [0][1] <= in
+    else when and (eq(n, UInt (1) ), eq(m, UInt (0) )) :
+        out [1][0] <= in
+    else when and (eq(n, UInt (1) ), eq(m, UInt (1) )) :
+        out [1][1] <= in
+```
+
+## Multiplexors
+
+一个多路选择器会根据条件信号的真假，从两个输入的表达式中选择输出一个。下面的例子中，若sel为高电平，则连接a到c，否则连接b到c：
+
+```
+module MyModule :
+    input a: UInt
+    input b: UInt
+    input sel: UInt<1>
+    output c: UInt
+    c <= mux(sel, a, b)
+```
+
+其中，多路选择器的表达式合法的条件是：
+
+1. 条件信号必须是一位的无符号整数。
+2. 两个输入的表达式的类型是等价的。
+3. 两个输入的表达式都是被动类型。
+
+## Conditionally Valids
+
+一个条件有效的表达式将一个条件信号以及一个表达式作为输入。当条件信号为真的时候，则会输出表达式，否则输出的结果是未定义的。下面的例子中，当valid为高电平的时候，a连接到c，否则c是未定义的。
+
+```
+module MyModule :
+    input a: UInt
+    input valid: UInt<1>
+    output c: UInt
+    c <= validif(valid, a)
+```
+
+条件有效表达式合法的条件是：
+
+1. 条件信号必须是一位的无符号整数。
+2. 输入的表达式必须是被动的。
+
+## Primitive Operations
+
+所有在基本类型上的基本操作都是FIRRTL中的原始操作。一般来说，所有的操作都会使用若干个表达式作为参数，同时也会有一些静态的字面上的整数数字作为参数。一般的原始操作的表达式如下：
+
+```
+op(arg0, arg1, ..., argn, int0, int1, ..., intm)
+```
+
+# Primitive Operations
+
+# Genders
+
+表达式的性别会和连接的合法性相关。所有的表达式都拥有一个性别，可以是男性、女性或者是双性。
+
+表达式的性别取决于其引用的电路部件的类型：
+
+- 引用输入端口、模块实例、memory、结点：男性
+- 引用输出端口：女性
+- 引用wire或者寄存器：双性
+
+向量中元素的性别取决于该向量中存放的元素的类型。
+
+bundle中元素的类型则有：如果没有被翻转，那么它的性别取决于该域的类型。如果翻转了，那么其性别与该域的类型反转。男性则翻转为女性，反之亦然。双性翻转仍然是双性。
+
+其它没有提到的表达式的性别一律为男性。
+
+# Width Inference
+
+位宽推导的规则：
+
+- 模块输入：取最小的位宽使得所有该模块的实例连接都合法。
+- 多路选择器：如果是基本类型，取位宽最大的输入作为输出的位数。如果是聚合类型，每个字段取位宽最大的输入作为输出的该字段的位数。
+- 条件有效表达式：取输入的表达式的位宽。
+
+# Namespaces
+
+每个模块都有一个独立的命名空间。所有在同一个模块中的电路部件的命名以及声明都必须是唯一的名字。bundle类型中的声明，所有的字段的名字也必须是唯一的。memory中所有端口的名字都必须是唯一的。
+
+## Name Expansion Algorithm
+
+输入一个基本类型，该算法输出该类型的名字。
+
+输入一个向量类型，该算法会在每个子元素的名字后追加一个'$i'的记号，其中i是向量中的第i个元素。
+
+输入一个bundle类型，该算法会在每个字段的名字后追加一个'$f'的记号，其中f是字段的名字。
+
+## Prefix Uniqueness
+
+# Details about Syntax
+
+# Concrete Syntax Tree
+
+![avatar](./images/Concrete-Syntax-Tree-1.png)
+
+![avatar](./images/Concrete-Syntax-Tree-2.png)
+
+![avatar](./images/Concrete-Syntax-Tree-3.png)
