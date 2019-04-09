@@ -686,3 +686,58 @@ read-under-write 标志用于表示当memory中同一个地址同时读写的行
 如果为undefined，那么此时读出的数据是未定义的。
 
 对于所有情况来说，如果memory中同一个地址数据同一个周期被多个写入端口写入，那么写入的值是未定义的。
+
+## Instances
+
+FIRRTL的模块通过实例语句来实例化模块。下面的例子说明了如何在顶层的模块Top当中创建一个MyModule的实例：
+
+```
+circuit Top :
+    module MyModule :
+        input a: UInt
+        output b: UInt
+        b <= a
+    module Top :
+        inst myinstance of MyModule
+```
+
+实例化的模块带有一个bundle类型，该bundle当中含有模块的输入输出端口。输入的端口会声明为 flip 。如上面的例子所示，myinstance拥有一个bundle类型：{flip a: UInt, b: UInt}。
+
+模块的实例总是会内联在其实例化的模块当中。为了防止无限递归的硬件结构，不能在模块定义中实例化自身，或者间接的通过实例化其他定义中有实例化该模块的模块。
+
+## Stops
+
+stop语句用于停止电路的仿真。在后端的代码中可以生成调试使用的相关代码。一个stop语句需要一个时钟信号，一个停机条件信号以及一个整数的退出码：
+
+```
+wire clk:Clock
+wire halt:UInt<1>
+stop(clk, halt, 42)
+```
+
+## Formatted Prints
+
+格式化的输出语句是用于在仿真的时候输出格式化的字符串。
+
+printf语句需要一个时钟信号，一个输出条件信号以及一个格式化的字符串，以及一个变量参数列表。条件信号必须是一位的无符号整数，并且变量参数必须全都是基本类型：
+
+```
+wire clk:Clock
+wire condition:UInt<1>
+wire a:UInt
+wire b:UInt
+printf(clk, condition, "a in hex: %x, b in decimal:%d.\n", a, b)
+```
+
+在每个时钟上升沿，当条件信号为高电平的时候，printf语句就会输出格式化的字符串。
+
+### Format Strings
+
+格式化的字符串支持下列参数的占位符：
+
+- %b: 参数以二进制的方式输出
+- %d: 参数以十进制的方式输出
+- %x: 参数以十六进制的方式输出
+- %%: 输出%字符
+
+同时还支持转义字符：'\n'，'\t'，'\\'，'\"'，'\''。
