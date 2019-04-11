@@ -17,6 +17,7 @@
         - **RISC-V**：RISC-V ISA相关笔记
             - Design of The RISC-V Processor：如何设计一个简单的基于RISC-V的处理器，基于 Computer Organization and Design RISC-V edition
             - Memory Hierarchy：RISC-V处理器的存储层次相关，基于 Computer Organization and Design RISC-V edition
+            - Soft cores：与RISC-V相关的软核CPU实现
     - Embedded Systems：嵌入式系统相关
 - **General Notes**：一般的笔记，想不出来放哪或者随手记录的
 - **Mathematics**：数学，一般与计科相关
