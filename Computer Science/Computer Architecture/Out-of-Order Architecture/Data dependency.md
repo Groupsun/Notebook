@@ -6,7 +6,7 @@
 
 假设表达式$S_1$和$S_2$，如果下列条件成立，则$S_2$依赖于$S_1$：
 
-$$ [I(S_1) \bigcap O(S_2)] \bigcup [O(S_1) \bigcap I(S_2)] \bigcup [O(S_1) \bigcap O(S+2)] \neq \emptyset $$
+$$ [I(S_1) \bigcap O(S_2)] \bigcup [O(S_1) \bigcap I(S_2)] \bigcup [O(S_1) \bigcap O(S_2)] \neq \emptyset $$
 
 其中：
 
