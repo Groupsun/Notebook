@@ -51,3 +51,12 @@ False
 >>> str
 'helloworld'
 ```
+
+# syntax suger
+
+syntax suger（语法糖）。比如`[]`语法，实际上就是创建一个列表，其在底层调用`list`的构造函数。
+
+```
+>>> [] == list()
+True
+```
