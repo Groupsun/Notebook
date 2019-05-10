@@ -95,6 +95,73 @@ LZH
 
 需要注意的是，列表和字典在声明在类对象时要小心，因为类对象是在所有实例之间共享的。声明mutable对象（列表、字典）为类对象可能会导致令人惊讶的结果。
 
+## 私有性
+
+Python中严格来说类中所有的方法和属性都是公共的。如果想要说明某个属性或者方法不应该公开使用，则更好的方法是在文档字符串中说明。
+
+一个惯例是，类的作者可以在类的属性或者方法前加上一个`_`作为前缀，这样使用它的程序员就会知道这是一个内部属性或者内部方法（并不是私有的），在使用它们之前需要三思。但是，如果程序员还是想使用，那么解释器也无法阻止。
+
+另外还有一种方法可以更强烈的表示该属性和方法在外部不要使用。在属性和方法前加上`__`作为前缀，会触发**命名改装**的特性：
+
+```python
+# main.py
+
+class TopSecret:
+    def __init__(self, encrypt_str, password):
+        self.__encrypt_str = encrypt_str
+        self.__password = password
+
+    def decrypt(self, password):
+        if password == self.__password:
+            return self.__encrypt_str
+        else:
+            return ""
+
+
+x = TopSecret("Jim is aniki", "123456")
+print(x.__encrypt_str)
+print(x.__password)
+```
+
+在这种情况下，确实会发生错误，看似不能访问该属性：
+
+```
+$ python3 main.py
+Traceback (most recent call last):
+  File "main.py", line 14, in <module>
+    print(x.__encrypt_str)
+AttributeError: 'TopSecret' object has no attribute '__encrypt_str'
+```
+
+然而，只需要稍加修改在外部访问的名字，就可以轻易获取到属性的信息：
+
+```python
+print(x._TopSecret__encrypt_str)
+print(x._TopSecret__password)
+```
+
+此时能够正常输出`__encrypt_str`以及`__password`的值。当在命名类的属性以及方法时，如果在前面加上了`__`的前缀，那么在外部访问就需要加上`_<类名>`的前缀。因此，这个做法同样也不能做到私有性。
+
+命名改装的另一个作用是有助于让子类重载方法而不破坏类内方法的调用。例如：
+
+```python
+class Mapping:
+    def update(self):
+        '''
+        some statements
+        '''
+    
+    __update = update   # 将基类的update方法备份
+
+class MappingSubclass(Mapping):
+    def update(self, arg1):
+        '''
+        some statements
+        '''
+```
+
+在上面例子的情况下，即使是`MappingSubclass`中引入了一个`__update`的标识符的情况下也不会出错。
+
 ### 补充说明
 
 1. 数据属性会覆盖同名的方法属性。因此在设计大型的程序时最好对命名进行某些约定，比如约定方法单词首字母大写；数据属性加上独特的短字符串前缀（如'_'）；用动词来命名方法，用名词来命名属性等等。
@@ -147,6 +214,35 @@ class DerivedClassName(BaseClassName):
     <statement-N>
 ```
 
-派生类定义的执行过程与基类相同。如果请求的属性在派生类中找不到，就会转向基类当中寻找。如果基类也派生自某个其他的类，则这个规则递归的应用。
+派生类定义的执行过程与基类相同。如果请求的属性或者方法在派生类中找不到，就会转向基类当中寻找。如果基类也派生自某个其他的类，则这个规则递归的应用。
 
+如果想要在派生类中访问基类的方法，只需要调用`BaseClas.method(self, arguments)`即可（前提是基类可爱全局作用域中以BaseClass的名称访问）。
 
+Python有两个内置的函数与继承机制有关：
+- 检查某个实例是否为某个类的实例或者是该类派生类的实例：`isinstance()`。如`isinstance(obj, int)`，仅当`obj`是`int`或者某个派生自`int`的类时为`True`。
+- 检查类的继承关系：`issubclass()`。如`issubclass(bool, int)`，则检查`bool`与`int`是否有继承关系，为`True`。
+
+### 多重继承
+
+```python
+class DerivedClass(Base1, Base2, Base3, ..., BaseN):
+    <statement-1>
+    .
+    .
+    .
+    <statement-N>
+```
+
+多重继承下属性的搜索顺序一般来说是深度优先、从左到右的，并且在层次结构发生重叠的情况下不会在同一个类中搜索两次。多继承的派生类的搜索顺序可以通过类中的内置属性`__mro__`来查看：
+
+```python
+# WorkStudent继承Student以及Company，Student继承Person
+
+print(WorkStudent.__mro__)
+```
+
+输出：
+
+```
+(<class '__main__.WorkStudent'>, <class '__main__.Student'>, <class '__main__.Person'>, <class '__main__.Company'>, <class 'object'>)
+```
