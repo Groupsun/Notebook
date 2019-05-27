@@ -10,7 +10,7 @@
 
 </div>
 
-由于CPU的频率不断提高，而FSB的带宽是固定的，Intel使用QPI来替换FSB。这之后，AMD在Athlon 64（2003~2009）的处理器当中集成了存储控制器，称为IMC（Integrated Memory Controller），CPU相当于可以直接访问内存。此时北桥实际上只剩下连接显卡等高速设备的PCIe接口等的功能，此时北桥的重要性不断降低，一些主板产商选择直接将北桥和南桥芯片合并。而AMD则在AMD APU（2011~）上直接在处理器中集成了北桥（包括IMC、高速PCIe以及集成的GPU）。Intel则在第一代的Core i7中将内存控制器集成到了CPU中，Intel IOH的作用只剩下连接显卡的功能。而从LGA 1156（2009）开始Intel集成了北桥，而主板上只剩下了南桥，Intel将其称为PCH（Platform Controller Hub，平台路径控制器），它重新分配各项I/O功能，把内存控制器及PCI-E控制器整合至处理器，PCH负责原来南桥及北桥的一些功能集。处理器和PCH由DMI（Direct Media Interface）连接（部分高阶Intel芯片组还可通过uplink直接连接到CPU，以解决DMI总线的瓶颈问题）即原来北桥和南桥的连接方法。。
+由于CPU的频率不断提高，而FSB的带宽是固定的，Intel使用QPI来替换FSB。这之后，AMD在Athlon 64（2003-2009）的处理器当中集成了存储控制器，称为IMC（Integrated Memory Controller），CPU相当于可以直接访问内存。此时北桥实际上只剩下连接显卡等高速设备的PCIe接口等的功能，此时北桥的重要性不断降低，一些主板产商选择直接将北桥和南桥芯片合并。而AMD则在AMD APU（2011-）上直接在处理器中集成了北桥（包括IMC、高速PCIe以及集成的GPU）。Intel则在第一代的Core i7中将内存控制器集成到了CPU中，Intel IOH的作用只剩下连接显卡的功能。而从LGA 1156（2009）开始Intel集成了北桥，而主板上只剩下了南桥，Intel将其称为PCH（Platform Controller Hub，平台路径控制器），它重新分配各项I/O功能，把内存控制器及PCI-E控制器整合至处理器，PCH负责原来南桥及北桥的一些功能集。处理器和PCH由DMI（Direct Media Interface）连接（部分高阶Intel芯片组还可通过uplink直接连接到CPU，以解决DMI总线的瓶颈问题）即原来北桥和南桥的连接方法。。
 
 <div align=center>
 
