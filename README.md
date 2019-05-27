@@ -8,9 +8,11 @@
 
 - **Computer Science**：计算机科学相关
     - **Computer Architecture**：计算机体系结构相关
+        - BOOM learing：Berkeley Out-of-Order BOOM core学习笔记
         - CA: AQA Reading notes： Computer Architecture: A Quantitative Approach 《计算机体系结构：量化研究方法》 阅读笔记
         - **CPU Building Tools**：Chisel硬件构造语言相关笔记
         - FPGA：FPGA原理相关
+        - General：与CA相关的一般的笔记
         - HLS：高层次综合相关笔记，包括对《FPGA并行编程》的学习笔记
         - MIPS：MIPS ISA相关笔记
         - Out-of-Order Architecture：乱序执行处理器架构相关笔记
@@ -23,6 +25,7 @@
 - **Mathematics**：数学，一般与计科相关
 - **Programming Language**：编程语言学习
     - Python：Python有关学习笔记
+        - Python面向对象编程：与Python面向对象编程学习相关笔记
 - **Study**：学业课程学习相关笔记
     - 嵌入式系统：SCUT-2018春-嵌入式系统课程笔记
     - 数值分析：SCUT-2018春-数值分析课程笔记
