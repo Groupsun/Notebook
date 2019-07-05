@@ -19,9 +19,3 @@
 12. PyRTL<1>: [HGSF] Python
 13. Migen<1>: [HGSF] Python
 14. PyHDL<1>: [HGSF] Python
-
-# Mamba
-
-Original paper: Mamba: Closing the Performance Gap in Productive Hardware Development Frameworks
-
-
