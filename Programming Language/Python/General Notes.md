@@ -110,3 +110,37 @@ Python除了`def/class/lambda`外，其他如:`if/elif/else/try/except/for/while
 # __dict__与__dir__
 
 Python类中的内建属性。其中__dict__可以获得一个字典，键值是类成员的所有名字，可以通过键值获得类成员，但不包括父类的对象。要想获得包括父类对象的所有可用的成员，要使用__dir__，来获得一个list。
+
+# Python 遍历字典
+
+```python
+d = {
+    'x': 1,
+    'y': 2,
+    'z': 3
+}
+```
+
+## 遍历keys
+
+```python
+for key in d:
+    print(key)
+
+for key in d.keys():
+    print(key)
+```
+
+## 遍历values
+
+```python
+for v in d.values():
+    print(values)
+```
+
+## 遍历keys和values
+
+```python
+for k, v in d.items():
+    print(k, v)
+```
