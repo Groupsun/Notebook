@@ -14,8 +14,9 @@
 7. Stratus<1>: [HGF] Python + Verilog
 8. PHDL<1>: [HGF] Python + Verilog
 9. JHDL<1>: [HGSF] Java
-10. CyaSH<1>: [HGSF] Haskell
+10. ClaSH<1>: [HGSF] Haskell
 11. MyHDL<1>: [HGSF] Python
 12. PyRTL<1>: [HGSF] Python
 13. Migen<1>: [HGSF] Python
 14. PyHDL<1>: [HGSF] Python
+15. SysPy<12>: [?] Bridge the gap between software expressions an hardware implementations.

@@ -25,3 +25,30 @@ Main contributions of this paper:
 - A concise IR simplifies the co-design of hardware transforms and analysis with digital designs.
 - Instrumentation API similar to software-like.
 - Integration of PyRTL-generated hardware overlays into Xilinx PYNQ.
+
+## Related work
+
+PyRTL: A complete tool chain. Variable types could be inferred during Python program execution. Hardware instrumentation framework -> walking and augmenting accelerator functionality concisely and efficiently.
+
+## PyRTL Overview
+
+Restricts users to a set of reasonable digital design practices. Clock and reset signals are implicit, BRAM are synchronous by default, no X or Z state, no unregistered feedbacks, etc.
+
+Valid code always corresponds to synthesizable hardware. Dynamic, object-oriented -> common software abstractions
+
+### *PyRTL Datatypes & Operators*
+
+Primary data structure: `WireVector` - list of individual wires -> Python built-in function support (eg. `len()`, indexing, slicing, etc.)
+
+```Python
+wire2 = wire1[0]
+wire3 = wire1[-1]
+wire4 = wire1[:3]
+```
+
+`WireVector` length could be inferred from the producing operation or being assigned to.
+
+Two different operator: 
+
+- Assignment operator: `=`. No hardware create, name binding. Execute by Python runtime
+- Connection operator: `<<=` 
