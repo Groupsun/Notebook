@@ -51,4 +51,5 @@ wire4 = wire1[:3]
 Two different operator: 
 
 - Assignment operator: `=`. No hardware create, name binding. Execute by Python runtime
-- Connection operator: `<<=` 
+- Connection operator: `<<=` . Connect two `WireVectors` , lexp driven by rexp.
+
