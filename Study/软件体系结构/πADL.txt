@@ -1,0 +1,41 @@
+Component Split
+    Port Input = [Read data until end-of-data reached]
+    Port Up = [Output data repeatedly]
+    Port Down = [Output data repeatedly]
+    Computation = [Repeatedly read data from Input Port, then output into Port Up and Port Down alternetively]
+
+Component UpperCase
+    Port Input = [Read data until end-of-data reached]
+    Port Output = [Output data repeatedly]
+    Computation = [Repeatedly read data from Input Port, then output uppercase into Port Output]
+
+Component Merge
+    Port Up = [Read data until end-of-data reached]
+    Port Down = [Read data until end-of-data reached]
+    Port Output = [Output data repeatedly]
+    Computation = [Repeatedly read data from Up Port and Down Port, the output the merge of Up Port and Down Port into Port Output]
+
+Connector Pipe
+    Role Source = [Deliver data repeatedly, signaling termination by close]
+    Role Sink = [Read data repeatedly, closing at or before end-of-data]
+    Glue = [Role Sink received data in the same order delivered by Role Source]
+
+System Capitalize
+    Types:
+        Component Split
+        Component UpperCase
+        Component Merge
+        Connector Pipe
+    Instances:
+        aSplit: Split
+        aUpper: UpperCase
+        aMerge: Merge
+        P1, P2, P3: Pipe
+    Assembly:
+        aSplit.Up AttachTo P1.Source
+        aSplit.Down AttachTo P3.Source
+        aUpper.Input AttachTo P1.Sink
+        aUpper.Output AttachTo P2.Source
+        aMerge.Up AttachTo P2.Sink
+        aMerge.Down AttachTo P3.Sink
+End Capitalize

@@ -1,0 +1,10 @@
+System Simple_CS = {
+    Component Client = {Port sendRequest}
+    Component Server = {Port receiveRequest}
+    Connector RPC = {Roles{Roles{Caller, Callee}}
+        Attachment: {
+            Client.sendRequest to RPC.Caller;
+            Server.receiveRequest to RPC.Callee
+        }
+    }
+}
