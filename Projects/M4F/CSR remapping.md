@@ -79,6 +79,7 @@
 |    Q1.15     |         q15         |     `q15_t`      |
 |    Q1.31     |         q31         |     `q31_t`      |
 |     Q1.7     |         q7          |      `q7_t`      |
+|    Q1.63     |         q63         |     `q63_t`      |
 |  无符号半字  |         u16         |    `uint16_t`    |
 |   无符号字   |         u32         |    `uint32_t`    |
 |  无符号字节  |         u8          |    `uint8_t`     |
@@ -279,23 +280,27 @@ for (n = 0; n < numSamples; n++) {
 }
 ```
 
+### Filtering Functions
 
+#### High Precision Q31 Biquad Cascade Filter
 
+```C++
+void 	arm_biquad_cas_df1_32x64_init_q31 (arm_biquad_cas_df1_32x64_ins_q31 *S, uint8_t numStages, const q31_t *pCoeffs, q63_t *pState, uint8_t postShift);
 
+void 	arm_biquad_cas_df1_32x64_q31 (const arm_biquad_cas_df1_32x64_ins_q31 *S, const q31_t *pSrc, q31_t *pDst, uint32_t blockSize);
+```
 
+该函数用于实现一个高精度的双二阶级联滤波器。滤波器的系数（coefficients）为Q1.31类型，而状态变数（state variables）则为Q1.63类型。滤波器的输入和输出分别是`pSrc`和`pDst`指针指向的Q31数组。
 
+##### 实现算法
 
+每个级联的双二阶滤波器使用以下的二阶微分方程来进行计算：
+$$
+y_n=b_0*x_n+b1*x_{n-1}+b2*x_{n-1}+a_1*y_{n-1}+a_2*y_{n-2}
+$$
+滤波器中每一级使用了5个系数以及4个状态变数，如图所示：
 
-
-
-
-
-
-
-
-
-
-
+![Biquad Filter Form I](https://upic-groupsun.oss-cn-shenzhen.aliyuncs.com/uPic/Biquad.gif)
 
 
 
