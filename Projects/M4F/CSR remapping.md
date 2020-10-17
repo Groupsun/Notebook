@@ -285,9 +285,9 @@ for (n = 0; n < numSamples; n++) {
 #### High Precision Q31 Biquad Cascade Filter
 
 ```C++
-void 	arm_biquad_cas_df1_32x64_init_q31 (arm_biquad_cas_df1_32x64_ins_q31 *S, uint8_t numStages, const q31_t *pCoeffs, q63_t *pState, uint8_t postShift);
+void 	arm_biquad_cas_df1_32x64_init_q31 (arm_biquad_cas_df1_32x64_ins_q31 *S, uint8_t numStages, const q31_t *pCoeffs, q63_t *pState, uint8_t postShift);			// 初始化函数
 
-void 	arm_biquad_cas_df1_32x64_q31 (const arm_biquad_cas_df1_32x64_ins_q31 *S, const q31_t *pSrc, q31_t *pDst, uint32_t blockSize);
+void 	arm_biquad_cas_df1_32x64_q31 (const arm_biquad_cas_df1_32x64_ins_q31 *S, const q31_t *pSrc, q31_t *pDst, uint32_t blockSize);														 // 运算函数
 ```
 
 该函数用于实现一个高精度的双二阶级联滤波器。滤波器的系数（coefficients）为Q1.31类型，而状态变数（state variables）则为Q1.63类型。滤波器的输入和输出分别是`pSrc`和`pDst`指针指向的Q31数组。
@@ -302,5 +302,25 @@ $$
 
 ![Biquad Filter Form I](https://upic-groupsun.oss-cn-shenzhen.aliyuncs.com/uPic/Biquad.gif)
 
+由于系数`a1`以及`a2`都是负反馈的系数，因此在CMSIS DSP库当中要求其为负数，即：
+$$
+y_n=b_0*x_n+b1*x_{n-1}+b2*x_{n-1}-a_1*y_{n-1}-a_2*y_{n-2}
+$$
+更高阶的滤波器可以通过增加级联的双二阶滤波器的数目来实现。`numStages`用于指定级联的数目。举例来说，如果需要一个8阶的滤波器，则可以指定`numStages=4`。
 
+`pState`指向的是状态变数数组，每个双二阶滤波器都有4个状态变数，在数组内的存储方式为：
+
+```
+{x[n-1], x[n-2], y[n-1], y[n-2]}
+```
+
+级联多个滤波器时，状态变数按照顺序依次存储。状态变数的数据类型为Q1.63。
+
+初始化函数用于初始化`S`，其用于存储一些用于初始化滤波器的数据结构：
+
+```
+arm_biquad_cas_df1_32x64_ins_q31 S1 = {numStages, pState, pCoeffs, postShift};
+```
+
+`postShift`是用于将滤波器的系数进行缩放的参数。函数规定系数的字面值范围为：[-1, +1)。通过使用`postShift`可以将系数扩大到超过该范围。若`postShift=1`，最终的结果会左移1位，也就是将所有的系数放大2倍。
 
