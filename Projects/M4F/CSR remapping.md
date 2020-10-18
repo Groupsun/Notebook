@@ -324,3 +324,60 @@ arm_biquad_cas_df1_32x64_ins_q31 S1 = {numStages, pState, pCoeffs, postShift};
 
 `postShift`是用于将滤波器的系数进行缩放的参数。函数规定系数的字面值范围为：[-1, +1)。通过使用`postShift`可以将系数扩大到超过该范围。若`postShift=1`，最终的结果会左移1位，也就是将所有的系数放大2倍。
 
+#### Biquad Cascade IIR Filters Using Direct Form I Structure
+
+该系列的函数实现的是双二阶级联IIR滤波器的Direct Form I形式，支持数据类型为f32、q15以及q31。其中q15以及q31具有快速运算的变体函数。由于函数数量较多，故不在此处一一列举。
+
+由于实现的同样是双二阶滤波器，因此与上述的实现形式相同，故也不再进行赘述。与上述高精度的实现不同，该系列函数的实现，滤波器系数以及状态变数的数据类型都与所要处理的数据类型相同（精度相同）。
+
+对于f32类型来说，初始化滤波器的数据结构与定点数不同：
+
+```C++
+arm_biquad_casd_df1_inst_f32 S1 = {numStages, pState, pCoeffs};
+```
+
+快速运算的版本使用了一个32位的Q2.30类型累加器。这个累加器保留着所有中间乘法步骤的结果的所有精度，但只提供了一个警戒位（guard bit）。因此当累加器溢出时，会将结果进行舍入，对结果产生一定的误差。输入的数据范围必须限制在[-0.25, +0.25)的范围中。最后累加器中的数据会截取Q1.15的数据长度输出，也就是说会舍弃掉低16位。
+
+对于非快速运算的版本，累加器的数据类型由函数所要操纵的数据类型决定。累加器固定是64位，如果操纵的数据是q31，那么累加器的数据类型为Q2.62。如果操纵的数据是q15，那么累加器的数据类型为Q34.40。
+
+#### Biquad Cascade IIR Filters Using a Direct Form II Transposed Structure
+
+该系列的函数实现的双二阶级联IIR滤波器的转置Direct Form II形式，支持的数据类型为f64以及f32。由于函数数量较多，故不在此处一一列举。转置的Direct Form II更适合于浮点数的处理。
+
+Direct Form II的计算形式如下：
+
+```
+y[n] = b0 * x[n] + d1
+d1 = b1 * x[n] + a1 * y[n] + d2
+d2 = b2 * x[n] + a2 * y[n]
+```
+
+其中`d1`以及`d2`是两个状态变数。图示为：
+
+![BiquadDF2Transposed.gif](https://upic-groupsun.oss-cn-shenzhen.aliyuncs.com/uPic/BiquadDF2Transposed.gif)
+
+单个滤波器当中，前向系数为`b0`、`b1`以及`b2`，后向的系数为`a1`以及`a2`。在CMSIS DSP当中，规定`a1`以及`a2`必须是负数：
+
+```
+y[n] = b0 * x[n] + d1;
+d1 = b1 * x[n] - a1 * y[n] + d2;
+d2 = b2 * x[n] - a2 * y[n];
+```
+
+在Direct Form II形式当中，`pState`数组的存放方式与Form I有区别：
+
+```
+{d11, d12, d21, d22, ...}
+```
+
+由于Direct Form II只支持浮点数，因此初始化的数据结构为：
+
+```C++
+arm_biquad_cascade_df2T_instance_f64 S1 = {numStages, pState, pCoeffs};
+arm_biquad_cascade_df2T_instance_f32 S1 = {numStages, pState, pCoeffs};
+```
+
+#### Convolution
+
+
+
