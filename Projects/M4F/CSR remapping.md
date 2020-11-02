@@ -379,5 +379,21 @@ arm_biquad_cascade_df2T_instance_f32 S1 = {numStages, pState, pCoeffs};
 
 #### Convolution
 
+CMSIS DSP库提供了支持数据类型q7、q15、q31以及f32的卷积运算函数。同时，库中还提供了q15以及q31数据类型快速运算以及优化的版本。由于函数数量太多，这里只列举一个模版的版本：
+
+```C++
+void 	arm_conv_q15 (const q15_t *pSrcA, uint32_t srcALen, const q15_t *pSrcB, uint32_t srcBLen, q15_t *pDst);		// q15模版版本
+```
+
+卷积算法的计算很简洁，`srcALen`以及`srcBLen`分别代表两个向量（或信号样本）`a[n]`以及`b[n]`。两个向量的卷积定义如下：
+$$
+c[n]=\sum_{k=0}^{srcALen} a[k]b[n-k]
+$$
+
+
+
+
+
+
 
 
