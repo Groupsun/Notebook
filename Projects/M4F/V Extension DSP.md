@@ -124,10 +124,16 @@ Examples:
 
 
 
-## 向量存取指令
+## 向量内存存取指令
 
 ### 指令编码
 
 基于标量浮点存取的编码格式（LOAD-FP/STORE-FP）：
 
 ![v-ldst-format](https://upic-groupsun.oss-cn-shenzhen.aliyuncs.com/uPic/image-20201104170937684.png)
+
+值得注意的是，向量内存存取指令中直接对静态传输数据的EEW编码。
+
+### 寻址模式
+
+支持三种：unit-stride（单步幅跨步）、strided（跨步）以及indexed（索引）。
