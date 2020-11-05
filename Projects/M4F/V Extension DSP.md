@@ -136,4 +136,25 @@ Examples:
 
 ### 寻址模式
 
-支持三种：unit-stride（单步幅跨步）、strided（跨步）以及indexed（索引）。
+支持三种：unit-stride、strided（跨步）以及indexed（索引）。向量加载与存储指令的基址寄存器以及步幅都是从`GPRx`寄存器中提取的。而所有向量存取指令的基本有效地址（base effective address）是由`rs1`寄存器（某个x寄存器）提供的。
+
+- unit-stride方式，存取操作从基本有效地址开始连续的进行存取。
+- strided方式，存取操纵从基本有效地址开始存取，然后由`rs2`寄存器（某个x寄存器）提供的偏移量不断递增地址来进行存取。
+- indexed的方式，存取操作的元素的地址由基本有效地址与`vs2`中制定的偏移量相加得到。数据向量寄存器组中有EEW=SEW，EMUL=LMUL。偏移向量寄存器组EEW则直接在指令中编码，且EMUL=(EEW/SEW)*LMUL
+
+向量偏移量的操作数被看作是字节地址偏移量的向量。如果该向量中的元素比XLEN小，则XLEN会被零扩展到XLEN。如果比XLEN大，则会截取到XLEN的大小来计算。
+
+寻址模式的编码在2位的`mop`域当中：
+
+![mop-encoding](https://upic-groupsun.oss-cn-shenzhen.aliyuncs.com/uPic/image-20201105204739129.png)
+
+unit-stride的还有额外的寻址模式表示在5位的`lumop`以及`sumop`当中，分别对应加载以及存储的指令：
+
+![lumop](https://upic-groupsun.oss-cn-shenzhen.aliyuncs.com/uPic/image-20201105211254690.png)
+
+![sumop](https://upic-groupsun.oss-cn-shenzhen.aliyuncs.com/uPic/image-20201105211317380.png)
+
+`nf[2:0]`用于编码每个段（segment）的字段（field）数。对于一般的向量存取指令来说，`nf=0`，表示单个元素在向量寄存器组以及内存对应的每个位置之间移动。更大的`nf`值用于在一个段中连续的访问多个字段。`nf[2:0]`还对单条向量寄存器存取指令的向量寄存器数量做编码。
+
+### 宽度编码
+
