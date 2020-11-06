@@ -158,3 +158,38 @@ unit-stride的还有额外的寻址模式表示在5位的`lumop`以及`sumop`当
 
 ### 宽度编码
 
+向量存取的指令将EEW直接编码在指令当中，且EMUL=(EEW/SEW)*LMUL：
+
+![vector-width-encoding](https://upic-groupsun.oss-cn-shenzhen.aliyuncs.com/uPic/image-20201106205419552.png)
+
+### 向量Uint-Stride类访存指令
+
+- [x] vle{EEW}.v：Unit-Stride加载。
+- [x] vse{EEW}.v：Unit-Stride存储。
+
+#### 简记
+
+```
+# Vector unit-stride loads and stores
+
+# vd destination, rs1 base address, vm is mask encoding (v0.t or <missing>)
+vle8.v    vd, (rs1), vm  #    8-bit unit-stride load
+vle16.v   vd, (rs1), vm  #   16-bit unit-stride load
+vle32.v   vd, (rs1), vm  #   32-bit unit-stride load
+vle64.v   vd, (rs1), vm  #   64-bit unit-stride load
+vle128.v  vd, (rs1), vm  #  128-bit unit-stride load
+vle256.v  vd, (rs1), vm  #  256-bit unit-stride load
+vle512.v  vd, (rs1), vm  #  512-bit unit-stride load
+vle1024.v vd, (rs1), vm  # 1024-bit unit-stride load
+
+# vs3 store data, rs1 base address, vm is mask encoding (v0.t or <missing>)
+vse8.v    vs3, (rs1), vm  #    8-bit unit-stride store
+vse16.v   vs3, (rs1), vm  #   16-bit unit-stride store
+vse32.v   vs3, (rs1), vm  #   32-bit unit-stride store
+vse64.v   vs3, (rs1), vm  #   64-bit unit-stride store
+vse128.v  vs3, (rs1), vm  #  128-bit unit-stride store
+vse256.v  vs3, (rs1), vm  #  256-bit unit-stride store
+vse512.v  vs3, (rs1), vm  #  512-bit unit-stride store
+vse1024.v vs3, (rs1), vm  # 1024-bit unit-stride store
+```
+
