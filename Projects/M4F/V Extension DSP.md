@@ -193,3 +193,60 @@ vse512.v  vs3, (rs1), vm  #  512-bit unit-stride store
 vse1024.v vs3, (rs1), vm  # 1024-bit unit-stride store
 ```
 
+
+
+## 初步的提取
+
+- [x] `vsetvli`
+- [x] `vsetvl`
+
+- [x] `vle{EEW}.v`
+- [x] `vse{EEW}.v`
+
+- [x] `vlse{EEW}.v`
+- [x] `vsse{EEW}.v`
+- [ ] `vlxei{EEW}.v`
+- [ ] `vsxei{EEW}.v`
+- [ ] `vsuxei{EEW}.v`
+- [x] `vadd.{vv|vx|vi}`
+- [x] `vsub.{vv|vx}`
+- [ ] Widening Integer Add/Subtract
+- [ ] Vector Integer Extension
+- [ ] Vector Integer Add-with-Carry / Subtract-with-borrow
+- [x] `vand.{vv|vx|vi}`
+- [x] `vor.{vv|vx|vi}`
+- [x] `vxor.{vv|vx|vi}`
+- [x] `vsll.{vv|vx|vi}`
+- [x] `vsrl.{vv|vx|vi}`
+- [x] `vsra.{vv|vx|vi}`
+- [ ] Vector Narrowing Integer Right Shift
+- [x] Vector Integer Comparison
+- [ ] Vector Integer Min/Max
+- [x] Vector Single-Width Integer Multiply
+- [x] Vector Integer Divide
+- [ ] Vector Widening Integer Multiply
+- [x] Vector Single-Width Integer Multiply-Add
+- [ ] Vector Widening Integer Multiply-Add
+- [ ] Vector Quad-Widening Integer Multiply-Add
+- [x] `vmerge.{vvm|vxm|vim}`
+- [x] `vmv.v.{v|x|i}`
+- [x] Vector Single-Width Saturating Add and Subtract
+- [x] Vector Single-Width Averaging Add and Subtract
+- [ ] Vector Single-Width Fractional Multiply with Rounding and Saturation
+- [ ] Vector Single-Width Scaling Shift
+- [ ] Vector Narrowing Fixed-Point Clip
+- [x] Vector Single-Width Integer Reduction
+- [ ] Vector Widening Integer Reduction
+- [x] Vector Mask-Register Logical
+- [x] `vpopc.m`
+- [x] `vfirst.m`
+- [x] `vmsbf.m`
+- [x] `vmsif.m`
+- [x] `vmsof.m`
+- [x] `viota.m`
+- [x] `vid.v`
+- [x] Integer Scalar Move
+- [ ] Vector Slide
+- [ ] Vector Register Gather
+- [ ] Vector Compress
+- [x] Whole Vector Register Move
