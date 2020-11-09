@@ -139,8 +139,14 @@ Examples:
 支持三种：unit-stride、strided（跨步）以及indexed（索引）。向量加载与存储指令的基址寄存器以及步幅都是从`GPRx`寄存器中提取的。而所有向量存取指令的基本有效地址（base effective address）是由`rs1`寄存器（某个x寄存器）提供的。
 
 - unit-stride方式，存取操作从基本有效地址开始连续的进行存取。
-- strided方式，存取操纵从基本有效地址开始存取，然后由`rs2`寄存器（某个x寄存器）提供的偏移量不断递增地址来进行存取。
-- indexed的方式，存取操作的元素的地址由基本有效地址与`vs2`中制定的偏移量相加得到。数据向量寄存器组中有EEW=SEW，EMUL=LMUL。偏移向量寄存器组EEW则直接在指令中编码，且EMUL=(EEW/SEW)*LMUL
+
+- strided方式，存取操纵从基本有效地址开始存取，然后由`rs2`寄存器（某个x寄存器）提供的偏移量不断递增地址来进行存取。[^1]
+
+  [^1]: （待定）strided方式在什么场景下会用到？
+
+- indexed的方式，存取操作的元素的地址由基本有效地址与`vs2`中制定的偏移量相加得到。数据向量寄存器组中有EEW=SEW，EMUL=LMUL。偏移向量寄存器组EEW则直接在指令中编码，且EMUL=(EEW/SEW)*LMUL。[^2]
+
+  [^2]: （待定）indexed方式在什么场景下会用到？
 
 向量偏移量的操作数被看作是字节地址偏移量的向量。如果该向量中的元素比XLEN小，则XLEN会被零扩展到XLEN。如果比XLEN大，则会截取到XLEN的大小来计算。
 
@@ -162,10 +168,10 @@ unit-stride的还有额外的寻址模式表示在5位的`lumop`以及`sumop`当
 
 ![vector-width-encoding](https://upic-groupsun.oss-cn-shenzhen.aliyuncs.com/uPic/image-20201106205419552.png)
 
-### 向量Uint-Stride类访存指令
+### 向量Unit-Stride类访存指令
 
-- [x] vle{EEW}.v：Unit-Stride加载。
-- [x] vse{EEW}.v：Unit-Stride存储。
+- [x] `vle{EEW}.v`：Unit-Stride加载。
+- [x] `vse{EEW}.v`：Unit-Stride存储。
 
 #### 简记
 
@@ -193,7 +199,67 @@ vse512.v  vs3, (rs1), vm  #  512-bit unit-stride store
 vse1024.v vs3, (rs1), vm  # 1024-bit unit-stride store
 ```
 
+### Stride类访存指令
 
+- [x] `vlse{SEW}.v`：Stride加载。
+- [x] `vsse{SEW}.v`：Stride存储。
+
+#### 简记
+
+```
+# Vector strided loads and stores
+
+# vd destination, rs1 base address, rs2 byte stride
+vlse8.v    vd, (rs1), rs2, vm  #    8-bit strided load
+vlse16.v   vd, (rs1), rs2, vm  #   16-bit strided load
+vlse32.v   vd, (rs1), rs2, vm  #   32-bit strided load
+vlse64.v   vd, (rs1), rs2, vm  #   64-bit strided load
+vlse128.v  vd, (rs1), rs2, vm  #  128-bit strided load
+vlse256.v  vd, (rs1), rs2, vm  #  256-bit strided load
+vlse512.v  vd, (rs1), rs2, vm  #  512-bit strided load
+vlse1024.v vd, (rs1), rs2, vm  # 1024-bit strided load
+
+# vs3 store data, rs1 base address, rs2 byte stride
+vsse8.v    vs3, (rs1), rs2, vm  #    8-bit strided store
+vsse16.v   vs3, (rs1), rs2, vm  #   16-bit strided store
+vsse32.v   vs3, (rs1), rs2, vm  #   32-bit strided store
+vsse64.v   vs3, (rs1), rs2, vm  #   64-bit strided store
+vsse128.v  vs3, (rs1), rs2, vm  #  128-bit strided store
+vsse256.v  vs3, (rs1), rs2, vm  #  256-bit strided store
+vsse512.v  vs3, (rs1), rs2, vm  #  512-bit strided store
+vsse1024.v vs3, (rs1), rs2, vm  # 1024-bit strided store
+```
+
+### Indexed类访存指令
+
+- [ ] `vlxei{SEW}.v`：indexed加载。
+- [ ] `vsxei{SEW}.v`：indexed有序存储。
+- [ ] `vsuxei{SEW}.v`：indexed无序存储。
+
+#### 简记
+
+```
+# Vector indexed loads and stores
+
+# vd destination, rs1 base address, vs2 indices
+vlxei8.v    vd, (rs1), vs2, vm  #    8-bit indexed load of SEW data
+vlxei16.v   vd, (rs1), vs2, vm  #   16-bit indexed load of SEW data
+vlxei32.v   vd, (rs1), vs2, vm  #   32-bit indexed load of SEW data
+vlxei64.v   vd, (rs1), vs2, vm  #   64-bit indexed load of SEW data
+
+# Vector ordered indexed store instructions
+# vs3 store data, rs1 base address, vs2 indices
+vsxei8.v    vs3, (rs1), vs2, vm  # ordered  8-bit indexed store of SEW data
+vsxei16.v   vs3, (rs1), vs2, vm  # ordered 16-bit indexed store of SEW data
+vsxei32.v   vs3, (rs1), vs2, vm  # ordered 32-bit indexed store of SEW data
+vsxei64.v   vs3, (rs1), vs2, vm  # ordered 64-bit indexed store of SEW data
+
+# Vector unordered-indexed store instructions
+vsuxei8.v   vs3, (rs1), vs2, vm # unordered  8-bit indexed store of SEW data
+vsuxei16.v  vs3, (rs1), vs2, vm # unordered 16-bit indexed store of SEW data
+vsuxei32.v  vs3, (rs1), vs2, vm # unordered 32-bit indexed store of SEW data
+vsuxei64.v  vs3, (rs1), vs2, vm # unordered 64-bit indexed store of SEW data
+```
 
 ## 初步的提取
 
@@ -203,11 +269,11 @@ vse1024.v vs3, (rs1), vm  # 1024-bit unit-stride store
 - [x] `vle{EEW}.v`
 - [x] `vse{EEW}.v`
 
-- [x] `vlse{EEW}.v`
-- [x] `vsse{EEW}.v`
-- [ ] `vlxei{EEW}.v`
-- [ ] `vsxei{EEW}.v`
-- [ ] `vsuxei{EEW}.v`
+- [x] `vlse{EEW}.v`[^1]
+- [x] `vsse{EEW}.v`[^1]
+- [ ] `vlxei{EEW}.v`[^2]
+- [ ] `vsxei{EEW}.v`[^2]
+- [ ] `vsuxei{EEW}.v`[^2]
 - [x] `vadd.{vv|vx|vi}`
 - [x] `vsub.{vv|vx}`
 - [ ] Widening Integer Add/Subtract
