@@ -440,8 +440,8 @@ vsext.vf8 vd, vs2, vm  # Sign-extend SEW/8 source to SEW destination
 `vmadc`以及`vmsbc`将源操作数可选带进位相加或者带借位相减，并将结果写入到目的寄存器`vd`中。若`vm=0`则带上进位/借位，若`vm=1`则不带上进位/借位。
 
 - [ ] `vadc.{vvm|vxm|vim}`：向量-{向量|标量|立即数}带进位加法。
-- [ ] `vmadc.{vvm|vxm|vim}`：可选模式下向量-{向量|标量|立即数}带进位加法。
-- [ ] `vmadc.{vv|vx|vi}`：可选模式下向量-{向量|标量|立即数}带不进位加法。
+- [ ] `vmadc.{vvm|vxm|vim}`：可选模式下向量-{向量|标量|立即数}带进位加法，将进位结果写入到目的寄存器中。
+- [ ] `vmadc.{vv|vx|vi}`：可选模式下向量-{向量|标量|立即数}带不进位加法，将进位结果写入到目的寄存器中。
 
 #### 简记
 
@@ -476,6 +476,207 @@ vmadc.vx    vd, vs2, rs1      # Vector-scalar, no carry-in
 
 # vd.mask[i] = carry_out(vs2[i] + imm)
 vmadc.vi    vd, vs2, imm      # Vector-immediate, no carry-in
+```
+
+下面展示如何对一个多字长的数据进行累加的例子，累加的结果写入到`v4`当中：
+
+```
+# Example multi-word arithmetic sequence, accumulating into v4
+vmadc.vvm v1, v4, v8, v0  # Get carry into temp register v1
+vadc.vvm v4, v4, v8, v0   # Calc new sum
+vmcpy.m v0, v1             # Move temp carry into v0 for next word
+```
+
+ 减法的指令类似，不过减法不提供立即数指令：
+
+- [ ] `vsbc.{vvm|vxm}`：向量-{向量|标量}带借位减法。
+- [ ] `vmsbc.{vvm|vxm}`：可选模式下向量-{向量|标量}带借位减法，将借位结果写入到目的寄存器中。
+- [ ] `vmsbc.{vv|vx}`：可选模式下向量-{向量|标量}不带借位减法，将借位结果写入到目的寄存器中。
+
+#### 简记
+
+```
+# Produce difference with borrow.
+
+# vd[i] = vs2[i] - vs1[i] - v0.mask[i]
+vsbc.vvm   vd, vs2, vs1, v0  # Vector-vector
+
+# vd[i] = vs2[i] - x[rs1] - v0.mask[i]
+vsbc.vxm   vd, vs2, rs1, v0  # Vector-scalar
+
+# Produce borrow out in mask register format
+
+# vd.mask[i] = borrow_out(vs2[i] - vs1[i] - v0.mask[i])
+vmsbc.vvm   vd, vs2, vs1, v0  # Vector-vector
+
+# vd.mask[i] = borrow_out(vs2[i] - x[rs1] - v0.mask[i])
+vmsbc.vxm   vd, vs2, rs1, v0  # Vector-scalar
+
+# vd.mask[i] = borrow_out(vs2[i] - vs1[i])
+vmsbc.vv    vd, vs2, vs1      # Vector-vector, no borrow-in
+
+# vd.mask[i] = borrow_out(vs2[i] - x[rs1])
+vmsbc.vx    vd, vs2, rs1      # Vector-scalar, no borrow-in
+```
+
+### 向量按位逻辑运算指令
+
+- [x] `vand.{vv|vx|vi}`：向量-{向量|标量|立即数}按位与。
+- [x] `vor.{vv|vx|vi}`：向量-{向量|标量|立即数}按位或。
+- [x] `vxor.{vv|vx|vi}`：向量-{向量|标量|立即数}按位异或。
+
+#### 简记
+
+```
+# Bitwise logical operations.
+vand.vv vd, vs2, vs1, vm   # Vector-vector
+vand.vx vd, vs2, rs1, vm   # vector-scalar
+vand.vi vd, vs2, imm, vm   # vector-immediate
+
+vor.vv vd, vs2, vs1, vm    # Vector-vector
+vor.vx vd, vs2, rs1, vm    # vector-scalar
+vor.vi vd, vs2, imm, vm    # vector-immediate
+
+vxor.vv vd, vs2, vs1, vm    # Vector-vector
+vxor.vx vd, vs2, rs1, vm    # vector-scalar
+vxor.vi vd, vs2, imm, vm    # vector-immediate
+```
+
+### 向量单一宽度移位指令
+
+- [x] `vsll.{vv|vx|vi}`：逻辑左移，左移位数由{向量|标量|立即数}提供。
+- [x] `vsrl.{vv|vx|vi}`：逻辑右移，左移位数由{向量|标量|立即数}提供。
+- [x] `vsra.{vv|vx|vi}`：算术右移，左移位数由{向量|标量|立即数}提供。
+
+#### 简记
+
+```
+# Bit shift operations
+vsll.vv vd, vs2, vs1, vm   # Vector-vector
+vsll.vx vd, vs2, rs1, vm   # vector-scalar
+vsll.vi vd, vs2, uimm, vm   # vector-immediate
+
+vsrl.vv vd, vs2, vs1, vm   # Vector-vector
+vsrl.vx vd, vs2, rs1, vm   # vector-scalar
+vsrl.vi vd, vs2, uimm, vm   # vector-immediate
+
+vsra.vv vd, vs2, vs1, vm   # Vector-vector
+vsra.vx vd, vs2, rs1, vm   # vector-scalar
+vsra.vi vd, vs2, uimm, vm   # vector-immediate
+```
+
+### 向量宽度缩小整型右移指令
+
+- [ ] `vnsrl.{wv|wx|wi}`：逻辑右移，左移位数由{向量|标量|立即数}提供，`vs2`宽度为2*SEW，结果宽度为SEW。
+- [ ] `vnsra.{wv|wx|wi}`：算术右移，左移位数由{向量|标量|立即数}提供，`vs2`宽度为2*SEW，结果宽度为SEW。
+
+#### 简记
+
+```
+# Narrowing shift right logical, SEW = (2*SEW) >> SEW
+vnsrl.wv vd, vs2, vs1, vm   # vector-vector
+vnsrl.wx vd, vs2, rs1, vm   # vector-scalar
+vnsrl.wi vd, vs2, uimm, vm   # vector-immediate
+
+# Narrowing shift right arithmetic, SEW = (2*SEW) >> SEW
+vnsra.wv vd, vs2, vs1, vm   # vector-vector
+vnsra.wx vd, vs2, rs1, vm   # vector-scalar
+vnsra.wi vd, vs2, uimm, vm   # vector-immediate
+```
+
+### 向量整型比较指令
+
+该类型的指令若比较结果为真，则将1写入到目的掩码寄存器对应元素中，否则就写入0。目的掩码向量只能包含在单个向量寄存器当中。目的掩码向量寄存器也可以是源向量掩码寄存器`v0`。
+
+- [x] `vmsea.{vv|vx|vi}`：向量-{向量|标量|立即数}相等。
+- [x] `vmsne.{vv|vx|vi}`：向量-{向量|标量|立即数}不等。
+- [x] `vmsltu.{vv|vx}`：向量-{向量|标量}无符号小于。
+- [x] `vmslt.{vv|vx}`：向量-{向量|标量}有符号小于。
+- [x] `vmsleu.{vv|vx|vi}`：向量-{向量|标量|立即数}无符号小于或等于。
+- [x] `vmsle.{vv|vx|vi}`：向量-{向量|标量|立即数}有符号小于或等于。
+- [x] `vmsgtu.{vx|vi}`：向量-{向量|立即数}无符号大于。
+- [x] `vmsgt.{vx|vi}`：向量-{向量|立即数}有符号大于。
+
+#### 简记
+
+```
+# Set if equal
+vmseq.vv vd, vs2, vs1, vm  # Vector-vector
+vmseq.vx vd, vs2, rs1, vm  # vector-scalar
+vmseq.vi vd, vs2, imm, vm  # vector-immediate
+
+# Set if not equal
+vmsne.vv vd, vs2, vs1, vm  # Vector-vector
+vmsne.vx vd, vs2, rs1, vm  # vector-scalar
+vmsne.vi vd, vs2, imm, vm  # vector-immediate
+
+# Set if less than, unsigned
+vmsltu.vv vd, vs2, vs1, vm  # Vector-vector
+vmsltu.vx vd, vs2, rs1, vm  # Vector-scalar
+
+# Set if less than, signed
+vmslt.vv vd, vs2, vs1, vm  # Vector-vector
+vmslt.vx vd, vs2, rs1, vm  # vector-scalar
+
+# Set if less than or equal, unsigned
+vmsleu.vv vd, vs2, vs1, vm   # Vector-vector
+vmsleu.vx vd, vs2, rs1, vm   # vector-scalar
+vmsleu.vi vd, vs2, imm, vm   # Vector-immediate
+
+# Set if less than or equal, signed
+vmsle.vv vd, vs2, vs1, vm  # Vector-vector
+vmsle.vx vd, vs2, rs1, vm  # vector-scalar
+vmsle.vi vd, vs2, imm, vm  # vector-immediate
+
+# Set if greater than, unsigned
+vmsgtu.vx vd, vs2, rs1, vm   # Vector-scalar
+vmsgtu.vi vd, vs2, imm, vm   # Vector-immediate
+
+# Set if greater than, signed
+vmsgt.vx vd, vs2, rs1, vm    # Vector-scalar
+vmsgt.vi vd, vs2, imm, vm    # Vector-immediate
+
+# Following two instructions are not provided directly
+# Set if greater than or equal, unsigned
+# vmsgeu.vx vd, vs2, rs1, vm    # Vector-scalar
+# Set if greater than or equal, signed
+# vmsge.vx vd, vs2, rs1, vm    # Vector-scalar
+```
+
+下面展示的是数学语言表示的比较如何使用汇编表示：
+
+```
+Comparison      Assembler Mapping             Assembler Pseudoinstruction
+
+va < vb         vmslt{u}.vv vd, va, vb, vm
+va <= vb        vmsle{u}.vv vd, va, vb, vm
+va > vb         vmslt{u}.vv vd, vb, va, vm    vmsgt{u}.vv vd, va, vb, vm
+va >= vb        vmsle{u}.vv vd, vb, va, vm    vmsge{u}.vv vd, va, vb, vm
+
+va < x          vmslt{u}.vx vd, va, x, vm
+va <= x         vmsle{u}.vx vd, va, x, vm
+va > x          vmsgt{u}.vx vd, va, x, vm
+va >= x         see below
+
+va < i          vmsle{u}.vi vd, va, i-1, vm    vmslt{u}.vi vd, va, i, vm
+va <= i         vmsle{u}.vi vd, va, i, vm
+va > i          vmsgt{u}.vi vd, va, i, vm
+va >= i         vmsgt{u}.vi vd, va, i-1, vm    vmsge{u}.vi vd, va, i, vm
+
+va, vb vector register groups
+x      scalar integer register
+i      immediate
+```
+
+由于编码空间的限制，`vmsge{u}`（大于或等于）类型的指令没有实现。如果需要实现类似`va >= x`的情况则需要特殊的方式。如需要实现`vmsge{u}.vx`，可以将x寄存器的数值减1再执行`vmsgt{u}.vx`：
+
+```
+Sequences to synthesize `vmsge{u}.vx` instruction
+
+va >= x,  x > minimum
+
+   addi t0, x, -1
+   vmsgt{u}.vx vd, va, t0, vm
 ```
 
 
