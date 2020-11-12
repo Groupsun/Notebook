@@ -433,6 +433,8 @@ vsext.vf8 vd, vs2, vm  # Sign-extend SEW/8 source to SEW destination
 
 ### 向量整型带进位加法/带借位减法指令
 
+#### 带进位加法
+
 这类指令的目的是为了实现多字长的整数算术指令，这些指令的实现将会提供一个进位/借位比特。对于每一个运算（加法或者减法），不但会提供SEW宽度的运算结果，还会生成进位/借位输出（单个布尔掩码比特）。进位/借位输入只能来自于`v0`寄存器，而进位/借位输出可以写入到任何一个合法的向量寄存器中。
 
 `vadc`以及`vsbc`将源操作数带进位相加或带借位相减，并将结果写入到目的寄存器`vd`中。这两类指令的`vm`域编码为0。
@@ -487,7 +489,9 @@ vadc.vvm v4, v4, v8, v0   # Calc new sum
 vmcpy.m v0, v1             # Move temp carry into v0 for next word
 ```
 
- 减法的指令类似，不过减法不提供立即数指令：
+#### 带借位减法 
+
+减法的指令类似，不过减法不提供立即数指令：
 
 - [ ] `vsbc.{vvm|vxm}`：向量-{向量|标量}带借位减法。
 - [ ] `vmsbc.{vvm|vxm}`：可选模式下向量-{向量|标量}带借位减法，将借位结果写入到目的寄存器中。
@@ -677,6 +681,200 @@ va >= x,  x > minimum
 
    addi t0, x, -1
    vmsgt{u}.vx vd, va, t0, vm
+```
+
+### 向量整型最小/最大指令
+
+- [ ] `vminu.{vv|vx}`：计算无符号向量1与{向量2|标量}中最小者。
+- [ ] `vmin.{vv|vx}`：计算有符号向量1与{向量2|标量}中最小者。
+- [ ] `vmaxu.{vv|vx}`：计算无符号向量1与{向量2|标量}中最大者。
+- [ ] `vmax.{vv|vx}`：计算有符号向量1与{向量2|标量}中最大者。
+
+#### 简记
+
+```
+# Unsigned minimum
+vminu.vv vd, vs2, vs1, vm   # Vector-vector
+vminu.vx vd, vs2, rs1, vm   # vector-scalar
+
+# Signed minimum
+vmin.vv vd, vs2, vs1, vm   # Vector-vector
+vmin.vx vd, vs2, rs1, vm   # vector-scalar
+
+# Unsigned maximum
+vmaxu.vv vd, vs2, vs1, vm   # Vector-vector
+vmaxu.vx vd, vs2, rs1, vm   # vector-scalar
+
+# Signed maximum
+vmax.vv vd, vs2, vs1, vm   # Vector-vector
+vmax.vx vd, vs2, rs1, vm   # vector-scalar
+```
+
+### 向量单宽度整型乘法指令
+
+单宽度的整型乘法指令的源操作数宽度为SEW，结果的宽度也为SEW。指令简写中后缀带有`h`的指令会将高位写入到目的寄存器当中。
+
+- [x] `vmul.{vv|vx}`：有符号向量-{向量|标量}乘法，写入低位结果。
+- [x] `vmulh.{vv|vx}`：有符号向量-{向量|标量}乘法，写入高位结果。
+- [x] `vmulhu.{vv|vx}`：无符号向量-{向量|标量}乘法，写入高位结果。
+- [x] `vmulhsu.{vv|vx}`：有符号向量`vs2`-无符号{向量|标量}乘法，写入高位结果。
+
+#### 简记
+
+```
+# Signed multiply, returning low bits of product
+vmul.vv vd, vs2, vs1, vm   # Vector-vector
+vmul.vx vd, vs2, rs1, vm   # vector-scalar
+
+# Signed multiply, returning high bits of product
+vmulh.vv vd, vs2, vs1, vm   # Vector-vector
+vmulh.vx vd, vs2, rs1, vm   # vector-scalar
+
+# Unsigned multiply, returning high bits of product
+vmulhu.vv vd, vs2, vs1, vm   # Vector-vector
+vmulhu.vx vd, vs2, rs1, vm   # vector-scalar
+
+# Signed(vs2)-Unsigned multiply, returning high bits of product
+vmulhsu.vv vd, vs2, vs1, vm   # Vector-vector
+vmulhsu.vx vd, vs2, rs1, vm   # vector-scalar
+```
+
+### 向量单宽度整型除法/取余指令[^7]
+
+- [x] `vdivu.{vv|vx}`：向量-{向量|标量}无符号除法。
+- [x] `vdiv.{vv|vx}`：向量-{向量|标量}有符号除法。
+- [x] `vremu.{vv|vx}`：向量-{向量|标量}无符号取余。
+- [x] `vrem.{vv|vx}`：向量-{向量|标量}有符号取余。
+
+[^7]: 取模与取余的区别在于，取模结果的符号与除数相同，而取余则与被除数的符号相同。
+
+#### 简记
+
+```
+# Unsigned divide.
+vdivu.vv vd, vs2, vs1, vm   # Vector-vector
+vdivu.vx vd, vs2, rs1, vm   # vector-scalar
+
+# Signed divide
+vdiv.vv vd, vs2, vs1, vm   # Vector-vector
+vdiv.vx vd, vs2, rs1, vm   # vector-scalar
+
+# Unsigned remainder
+vremu.vv vd, vs2, vs1, vm   # Vector-vector
+vremu.vx vd, vs2, rs1, vm   # vector-scalar
+
+# Signed remainder
+vrem.vv vd, vs2, vs1, vm   # Vector-vector
+vrem.vx vd, vs2, rs1, vm   # vector-scalar
+```
+
+### 向量宽度扩展整型乘法指令
+
+这类指令会对宽度为SEW的源操作数做乘法并返回宽度为2*SEW的结果。
+
+- [ ] `vwmul.{vv|vx}`：向量-{向量|标量}有符号宽度扩展乘法。
+- [ ] `vwmulu.{vv|vx}`：向量-{向量|标量}无符号宽度扩展乘法。
+- [ ] `vwmulsu.{vv|vx}`：有符号向量-无符号{向量|标量}宽度扩展乘法。
+
+#### 简记
+
+```
+# Widening signed-integer multiply
+vwmul.vv  vd, vs2, vs1, vm# vector-vector
+vwmul.vx  vd, vs2, rs1, vm # vector-scalar
+
+# Widening unsigned-integer multiply
+vwmulu.vv vd, vs2, vs1, vm # vector-vector
+vwmulu.vx vd, vs2, rs1, vm # vector-scalar
+
+# Widening signed-unsigned integer multiply
+vwmulsu.vv vd, vs2, vs1, vm # vector-vector
+vwmulsu.vx vd, vs2, rs1, vm # vector-scalar
+```
+
+### 向量单宽度整型乘加/减指令
+
+整型乘加/减指令会破坏源操作数并提供两种不同的形式：一种是覆盖加数（addend）或者被减数（minuend），另一种形式是覆盖被乘数。
+
+- [x] `vmacc.{vv|vx}`：向量-{向量|标量}乘加，覆盖加数。
+- [x] `vnmsac.{vv|vx}`：向量-{向量|标量}乘减，覆盖被减数。
+- [x] `vmadd.{vv|vx}`：向量-{向量|标量}乘加，覆盖被乘数。
+- [x] `vnmsub.{vv|vx}`：向量-{向量|标量}乘减，覆盖被乘数。
+
+#### 简记
+
+```
+# Integer multiply-add, overwrite addend
+vmacc.vv vd, vs1, vs2, vm    # vd[i] = +(vs1[i] * vs2[i]) + vd[i]
+vmacc.vx vd, rs1, vs2, vm    # vd[i] = +(x[rs1] * vs2[i]) + vd[i]
+
+# Integer multiply-sub, overwrite minuend
+vnmsac.vv vd, vs1, vs2, vm    # vd[i] = -(vs1[i] * vs2[i]) + vd[i]
+vnmsac.vx vd, rs1, vs2, vm    # vd[i] = -(x[rs1] * vs2[i]) + vd[i]
+
+# Integer multiply-add, overwrite multiplicand
+vmadd.vv vd, vs1, vs2, vm    # vd[i] = (vs1[i] * vd[i]) + vs2[i]
+vmadd.vx vd, rs1, vs2, vm    # vd[i] = (x[rs1] * vd[i]) + vs2[i]
+
+# Integer multiply-sub, overwrite multiplicand
+vnmsub.vv vd, vs1, vs2, vm    # vd[i] = -(vs1[i] * vd[i]) + vs2[i]
+vnmsub.vx vd, rs1, vs2, vm    # vd[i] = -(x[rs1] * vd[i]) + vs2[i]
+```
+
+### 向量宽度扩展整型乘加指令
+
+该类指令源操作数的宽度都为SEW，其中两个源操作数乘法得到的结果宽度为2\*SEW，并与第三个操作数相加得2\*SEW宽度的结果。
+
+- [ ] `vwmaccu.{vv|vx}`：向量-{向量|标量}无符号宽度扩展乘加，覆盖加数。
+- [ ] `vwmacc.{vv|vx}`：向量-{向量|标量}有符号宽度扩展乘加，覆盖加数。
+- [ ] `vwmaccsu.{vv|vx}`：有符号向量-无符号{向量|标量}宽度扩展乘加，覆盖加数。
+- [ ] `vwmaccus.vx`：无符号向量-有符号{向量|标量}宽度扩展乘加，覆盖加数。
+
+#### 简记
+
+```
+# Widening unsigned-integer multiply-add, overwrite addend
+vwmaccu.vv vd, vs1, vs2, vm    # vd[i] = +(vs1[i] * vs2[i]) + vd[i]
+vwmaccu.vx vd, rs1, vs2, vm    # vd[i] = +(x[rs1] * vs2[i]) + vd[i]
+
+# Widening signed-integer multiply-add, overwrite addend
+vwmacc.vv vd, vs1, vs2, vm    # vd[i] = +(vs1[i] * vs2[i]) + vd[i]
+vwmacc.vx vd, rs1, vs2, vm    # vd[i] = +(x[rs1] * vs2[i]) + vd[i]
+
+# Widening signed-unsigned-integer multiply-add, overwrite addend
+vwmaccsu.vv vd, vs1, vs2, vm    # vd[i] = +(signed(vs1[i]) * unsigned(vs2[i])) + vd[i]
+vwmaccsu.vx vd, rs1, vs2, vm    # vd[i] = +(signed(x[rs1]) * unsigned(vs2[i])) + vd[i]
+
+# Widening unsigned-signed-integer multiply-add, overwrite addend
+vwmaccus.vx vd, rs1, vs2, vm    # vd[i] = +(unsigned(x[rs1]) * signed(vs2[i])) + vd[i]
+```
+
+### 向量整型合并指令
+
+这类指令根据掩码来合并两个源操作数。对于掩码寄存器中的每一位来选择对应的元素。若掩码该位为1，则选择将`vs1`中对应的元素拷贝到目的寄存器组中对应的位置，否则将拷贝`vs2`对应的元素。
+
+- [ ] `vmerge.{vvm|vxm|vim}`：向量-{向量|标量|立即数}合并指令。
+
+#### 简记
+
+```
+vmerge.vvm vd, vs2, vs1, v0  # vd[i] = v0.mask[i] ? vs1[i] : vs2[i]
+vmerge.vxm vd, vs2, rs1, v0  # vd[i] = v0.mask[i] ? x[rs1] : vs2[i]
+vmerge.vim vd, vs2, imm, v0  # vd[i] = v0.mask[i] ? imm    : vs2[i]
+```
+
+### 向量整型复制指令
+
+这类指令将一个源操作数复制到目的向量寄存器组中。如果源操作数是一个标量寄存器（通用寄存器）或者一个立即数，它会复制到目的向量寄存器组中的每一个元素中。
+
+- [x] `vmv.v.{v|x|i}`：向量整型复制指令，源操作数为{向量|标量|立即数}。
+
+#### 简记
+
+```
+vmv.v.v vd, vs1 # vd[i] = vs1[i]
+vmv.v.x vd, rs1 # vd[i] = rs1
+vmv.v.i vd, imm # vd[i] = imm
 ```
 
 
