@@ -1,3 +1,6 @@
 [submodule "Computer"]
 	path = Computer
 	url = https://github.com/Groupsun/CV32E40P_User_Manual
+[submodule "Computer Science/Computer Architecture/RISC-V/CV32E40P"]
+	path = Computer Science/Computer Architecture/RISC-V/CV32E40P
+	url = https://github.com/Groupsun/CV32E40P_User_Manual
