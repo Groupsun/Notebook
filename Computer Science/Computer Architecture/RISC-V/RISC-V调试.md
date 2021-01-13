@@ -57,6 +57,12 @@ JTAG主机通过IR SCAN设置IR寄存器的值，然后通过DR SCAN来读写对
 
 
 
+## Debug Transport Module（DTM）
+
+DTM提供给予外部JTAG或USB访问DM的渠道。
+
+
+
 ## 参考资料
 
 - [深入浅出RISC-V调试](https://liangkangnan.gitee.io/2020/03/21/深入浅出RISC-V调试/)
