@@ -59,7 +59,51 @@ JTAG主机通过IR SCAN设置IR寄存器的值，然后通过DR SCAN来读写对
 
 ## Debug Transport Module（DTM）
 
-DTM提供给予外部JTAG或USB访问DM的渠道。
+DTM提供给予外部JTAG或USB访问DM的渠道。RISC-V Debug标准文档所提供的DTM定义基于标准的JTAG协议。
+
+### JTAG DTM
+
+文档中所定义的DTM基于标准的JTAG TAP，JTAG TAP允许访问任意的JTAG寄存器。通过使用JTAG IR进行选择，然后通过JTAG DR进行访问。
+
+#### JTAG DTM 寄存器
+
+JTAG TAP所使用的DTM中必须包含一个至少5位的IR。当TAP重置后，IR必须重置为默认值`00001`，选择IDCODE寄存器。下面给出JTAG寄存器列表：
+
+![JTAG寄存器列表](https://upic-groupsun.oss-cn-shenzhen.aliyuncs.com/uPic/image-20210114155028593.png)
+
+若IR的位宽比5位要更大，那么上面列表中的寄存器地址需要进行零扩展，而BYPASS的0x1f地址编码除外，它进行的是符号扩展，也就是高位填充1。通常的调试器所要用到的JTAG寄存器只有BYPASS以及IDCODE，但标准中还提供了冗余的编码地址空间给其他标准的JTAG指令。
+
+#### IDCODE（位于0x01）
+
+该寄存器在TAP状态机重置时被选择，且该寄存器是只读的。IDCODE寄存器各个域的含义如下：
+
+<img src="https://upic-groupsun.oss-cn-shenzhen.aliyuncs.com/uPic/image-20210114155956799.png" alt="IDCODE寄存器" style="zoom:50%;" />
+
+| 域             | 描述                                           | 访问权限 | 重置值     |
+| -------------- | ---------------------------------------------- | -------- | ---------- |
+| **Version**    | 标记部件版本号                                 | R[^1]    | Preset[^2] |
+| **PartNumber** | 标记部件设计者序列号                           | R[^1]    | Preset[^2] |
+| **Manufld**    | 厂商号，遵循JEP106标准分配，实际中可以为任意值 | R[^1]    | Preset[^2] |
+
+[^1]: 只读。
+[^2]: 表示重置后的值由设计者决定。
+
+#### DTM Control and Status（`dtmcs`，位于0x10）
+
+DTM控制与状态寄存器。`dtmcs`各个域的含义如下：
+
+![dtmcs寄存器](https://upic-groupsun.oss-cn-shenzhen.aliyuncs.com/uPic/image-20210114161145255.png)
+
+| 域               | 描述                                                         | 访问权限 | 重置值     |
+| ---------------- | ------------------------------------------------------------ | -------- | ---------- |
+| **dmihardreset** | **DTM模块硬复位**<br>往该位写1将DTM进行硬复位，将会导致DTM丢弃任何正在进行的DMI事务，且将所有寄存器和内部的状态置为重置值。一般来说，这种情况只有在调试器有理由相信当前正在进行的DMI事务将永远不会完成时才会发生。 | W1[^3]   | -          |
+| **dmireset**     | **清除错误状态**<br>往该位写1会清除错误状态，但是不会影响当前正在执行的DMI事务。 | W1[^3]   | -          |
+| **idle**         | 提示调试器可以停留在**Run-Test-Idle**的周期数，用于避免在每次DMI扫描后返回'busy'。当必要时，调试器还需要检查`dmistat`。<br>0：没有进入**Run-Test-Idle**状态的必要。<br>1：进入**Run-Test-Idle**状态可以立刻离开。<br>2：进入**Run-Test-Idle**状态后需要保持1个周期后才能离开<br>以此类推 | R[^1]    | Preset[^2] |
+| **dmistat**      | **上一次操作的状态**<br>0：无错。<br>1：保留。含义与2相同。<br>2：操作出错。<br>3：操作未完成。 | R[^1]    | 0          |
+| **abits**        | `dmi`寄存器中地址域（`address`）的宽度。                     | R[^1]    | Preset     |
+| **version**      | 实现所对应的Debug标准文档的版本。<br>0：v0.11。<br>1：v0.13和v1.0。<br>15：非标。 | R[^1]    | 1          |
+
+[^3]: 只允许写，且只有写1时有效。尝试读时永远返回0。
 
 
 
